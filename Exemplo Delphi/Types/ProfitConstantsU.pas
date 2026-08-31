@@ -36,6 +36,20 @@ const
   NL_FILE_ALREADY_EXISTS   = NL_NO_USER               + 1;  // Arquivo já existe
   NL_INVALID_TICKER        = NL_FILE_ALREADY_EXISTS   + 1;
   NL_NOT_MASTER_ACCOUNT    = NL_INVALID_TICKER        + 1;  // Conta não é master
+  NL_NOT_MY_TRADE          = NL_NOT_MASTER_ACCOUNT    + 1;  // Trade/oferta não pertence a nenhuma conta do usuário
+  NL_NOT_EQUALS            = NL_NOT_MY_TRADE          + 1;  // Dois recursos não são iguais
+  NL_INVALID_DLL_AUTH      = NL_NOT_EQUALS            + 1;  // DLL não validada pelo HMAC
+  NL_INVALID_SIGNATURE     = NL_INVALID_DLL_AUTH      + 1;  // DLL não validou o executável
+  NL_NOT_IMPLEMENTED       = NL_INVALID_SIGNATURE     + 1;  // Feature ainda não implementada
+  NL_BROKER_NOT_ALLOWED    = NL_NOT_IMPLEMENTED       + 1;  // Broker sem acesso ao recurso do backoffice
+  NL_FILE_NOT_EXISTS       = NL_BROKER_NOT_ALLOWED    + 1;  // Arquivo não existe
+  NL_NTSL_PARSE_FAILED     = NL_FILE_NOT_EXISTS       + 1;  // Parse do Language falhou
+  NL_NTSL_TOO_MANY_ASSETS  = NL_NTSL_PARSE_FAILED     + 1;  // Muitos assets usados no código NTSL
+  NL_NOT_CONSISTENT        = NL_NTSL_TOO_MANY_ASSETS  + 1;  // Recurso não é considerado consistente
+  NL_SINGLE_THREADED       = NL_NOT_CONSISTENT        + 1;
+  NL_NOT_SAME_THREAD       = NL_SINGLE_THREADED       + 1;
+  NL_TIMEOUT               = NL_NOT_SAME_THREAD       + 1;
+  NL_HISTORY_PERIOD_LIMIT  = NL_TIMEOUT               + 1;  // Período de histórico solicitado excede o limite permitido (data inicial com mais de 30 dias)
 
 function NResultToString(const a_nResult : Int64) : String;
 
@@ -80,6 +94,20 @@ begin
     NL_FILE_ALREADY_EXISTS   : Result := 'NL_FILE_ALREADY_EXISTS';
     NL_INVALID_TICKER        : Result := 'NL_INVALID_TICKER';
     NL_NOT_MASTER_ACCOUNT    : Result := 'NL_NOT_MASTER_ACCOUNT';
+    NL_NOT_MY_TRADE          : Result := 'NL_NOT_MY_TRADE';
+    NL_NOT_EQUALS            : Result := 'NL_NOT_EQUALS';
+    NL_INVALID_DLL_AUTH      : Result := 'NL_INVALID_DLL_AUTH';
+    NL_INVALID_SIGNATURE     : Result := 'NL_INVALID_SIGNATURE';
+    NL_NOT_IMPLEMENTED       : Result := 'NL_NOT_IMPLEMENTED';
+    NL_BROKER_NOT_ALLOWED    : Result := 'NL_BROKER_NOT_ALLOWED';
+    NL_FILE_NOT_EXISTS       : Result := 'NL_FILE_NOT_EXISTS';
+    NL_NTSL_PARSE_FAILED     : Result := 'NL_NTSL_PARSE_FAILED';
+    NL_NTSL_TOO_MANY_ASSETS  : Result := 'NL_NTSL_TOO_MANY_ASSETS';
+    NL_NOT_CONSISTENT        : Result := 'NL_NOT_CONSISTENT';
+    NL_SINGLE_THREADED       : Result := 'NL_SINGLE_THREADED';
+    NL_NOT_SAME_THREAD       : Result := 'NL_NOT_SAME_THREAD';
+    NL_TIMEOUT               : Result := 'NL_TIMEOUT';
+    NL_HISTORY_PERIOD_LIMIT  : Result := 'NL_HISTORY_PERIOD_LIMIT';
   else
     if a_nResult < 0
       then Result := Format('0x%x', [Integer(a_nResult)])

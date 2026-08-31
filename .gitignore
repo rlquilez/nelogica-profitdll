@@ -164,3 +164,6 @@ cython_debug/
 # Custom directories to ignore
 .history/
 .github/
+
+# macOS
+.DS_Store

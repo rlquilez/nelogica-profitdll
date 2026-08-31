@@ -22,9 +22,9 @@ type
     rAssetID            : TAssetIDRec;
     strName             : PWideChar;
     strDescription      : PWideChar;
-    nMinOrderQtd        : Integer;
-    nMaxOrderQtd        : Integer;
-    nLote               : Integer;
+    nMinOrderQtd        : Int64;
+    nMaxOrderQtd        : Int64;
+    nLote               : Int64;
     stSecurityType      : Integer;
     ssSecuritySubType   : Integer;
     sMinPriceIncrement  : Double;
@@ -37,9 +37,9 @@ type
     rAssetID            : TAssetIDRec;
     strName             : PWideChar;
     strDescription      : PWideChar;
-    nMinOrderQtd        : Integer;
-    nMaxOrderQtd        : Integer;
-    nLote               : Integer;
+    nMinOrderQtd        : Int64;
+    nMaxOrderQtd        : Int64;
+    nLote               : Int64;
     stSecurityType      : Integer;
     ssSecuritySubType   : Integer;
     sMinPriceIncrement  : Double;
@@ -347,6 +347,10 @@ type
     const a_Side       : Byte;
     const a_nPosition  : Integer;
     const a_UpdateType : Byte
+  ); stdcall;
+
+  TConnectorTradingMessageResultCallback = procedure(
+    const a_pResult : PConnectorTradingMessageResult
   ); stdcall;
 
 const

@@ -2,10 +2,11 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>ProfitDLL</RootNamespace>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>ProfitDLLClient</RootNamespace>
     <AssemblyName>ProfitDLLCSClient</AssemblyName>
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
 </Project>

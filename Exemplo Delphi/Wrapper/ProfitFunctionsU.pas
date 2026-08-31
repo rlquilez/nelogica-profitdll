@@ -197,6 +197,7 @@ function  SetAssetListInfoCallbackV2       (const a_AssetListInfoCallbackV2     
 function  SetInvalidTickerCallback         (const a_InvalidTickerCallback        : TInvalidTickerCallback)          : Integer; stdcall; external c_strDLLPath;
 function  SetTradeCallback                 (const a_TradeCallback                : TTradeCallback)                  : Integer; stdcall; external c_strDLLPath;
 function  SetHistoryTradeCallback          (const a_HistoryTradeCallback         : THistoryTradeCallback)           : Integer; stdcall; external c_strDLLPath;
+function  SetHistoryTradeCallbackV2        (const a_HistoryTradeCallbackV2       : TConnectorTradeCallback)         : Integer; stdcall; external c_strDLLPath;
 function  SetDailyCallback                 (const a_DailyCallback                : TDailyCallback)                  : Integer; stdcall; external c_strDLLPath;
 function  SetTheoreticalPriceCallback      (const a_TheoreticalPriceCallback     : TTheoreticalPriceCallback)       : Integer; stdcall; external c_strDLLPath;
 function  SetTinyBookCallback              (const a_TinyBookCallback             : TTinyBookCallback)               : Integer; stdcall; external c_strDLLPath;
@@ -221,6 +222,8 @@ function  SetOrderHistoryCallback          (const a_OrderHistoryCallback        
 
 function  SetBrokerAccountListChangedCallback    (const a_BrokerAccountListChangedCallback    : TConnectorBrokerAccountListCallback)    : Integer; stdcall; external c_strDLLPath;
 function  SetBrokerSubAccountListChangedCallback (const a_BrokerSubAccountListChangedCallback : TConnectorBrokerSubAccountListCallback) : Integer; stdcall; external c_strDLLPath;
+
+function  SetTradingMessageResultCallback(const a_ResultCallback : TConnectorTradingMessageResultCallback) : Integer; stdcall; external c_strDLLPath;
 
 function GetAgentNameLength                (const a_nAgentID : Integer; const a_bShortName : Cardinal): Integer; stdcall; external c_strDLLPath;
 function GetAgentName                      (const a_nCount : Integer; const a_nAgentID : Integer; a_Agent : PWideChar; const a_bShortName : Cardinal) : Integer; stdcall; external c_strDLLPath;

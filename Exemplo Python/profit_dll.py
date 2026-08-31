@@ -70,7 +70,6 @@ def initializeDll(path: str) -> WinDLL:
     profit_dll.TranslateTrade.argtypes = [c_size_t, POINTER(TConnectorTrade)]
     profit_dll.TranslateTrade.restype = c_int
 
-
     profit_dll.SubscribePriceDepth.argtypes = [POINTER(TConnectorAssetIdentifier)]
     profit_dll.SubscribePriceDepth.restype = c_int
 
@@ -86,6 +85,9 @@ def initializeDll(path: str) -> WinDLL:
     profit_dll.GetTheoreticalValues.argtypes = [POINTER(TConnectorAssetIdentifier), POINTER(c_double), POINTER(c_int64)]
     profit_dll.GetTheoreticalValues.restype = c_int
 
+    profit_dll.GetHealthStatus.argtypes = [POINTER(c_int)]
+    profit_dll.GetHealthStatus.restype = c_int
+
     profit_dll.GetAccountCountByBroker.argtypes = [c_int]
     profit_dll.GetAccountCountByBroker.restype = c_int
 
@@ -100,5 +102,11 @@ def initializeDll(path: str) -> WinDLL:
 
     profit_dll.EnumerateAllPositionAssets.argtypes = [POINTER(TConnectorAccountIdentifier), c_ubyte, c_long, TConnectorEnumerateAssetProc]
     profit_dll.EnumerateAllPositionAssets.restype = c_int
+
+    profit_dll.GetHistoryTrades.argtypes = [c_wchar_p, c_wchar_p, c_wchar_p, c_wchar_p]
+    profit_dll.GetHistoryTrades.restype = c_int
+
+    profit_dll.SetHistoryTradeCallbackV2.argtypes = [TConnectorTradeCallback]
+    profit_dll.SetHistoryTradeCallbackV2.restype = c_int
 
     return profit_dll

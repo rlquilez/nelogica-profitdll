@@ -45,11 +45,12 @@ object frmClient: TfrmClient
     object lbLogin: TLabel
       Left = 1
       Top = 1
-      Width = 70
+      Width = 223
       Height = 13
       Align = alTop
       Alignment = taCenter
       Caption = 'Dados de login'
+      ExplicitWidth = 70
     end
     object lbStatus: TLabel
       Left = 18
@@ -207,20 +208,22 @@ object frmClient: TfrmClient
     object lbCallbackTitle: TLabel
       Left = 1
       Top = 1
-      Width = 104
+      Width = 515
       Height = 13
       Align = alTop
       Alignment = taCenter
       Caption = 'Retorno das callbacks'
+      ExplicitWidth = 104
     end
     object lbFuncTitle: TLabel
       Left = 1
       Top = 601
-      Width = 147
+      Width = 515
       Height = 13
       Align = alBottom
       Alignment = taCenter
       Caption = 'Retorno das fun'#231#245'es expostas'
+      ExplicitWidth = 147
     end
     object mmUpdates: TMemo
       Left = 1
@@ -606,7 +609,7 @@ object frmClient: TfrmClient
         end
         object lbAgentIdMd: TLabel
           Left = 3
-          Top = 200
+          Top = 94
           Width = 43
           Height = 13
           Caption = 'Agent ID'
@@ -630,66 +633,31 @@ object frmClient: TfrmClient
         end
         object lbDateStartMd: TLabel
           Left = 3
-          Top = 238
+          Top = 132
           Width = 51
           Height = 13
           Caption = 'Data inicial'
         end
         object lbDateEndMd: TLabel
           Left = 3
-          Top = 284
+          Top = 178
           Width = 46
           Height = 13
           Caption = 'Data final'
         end
         object Bevel1: TBevel
-          Left = 5
-          Top = 331
+          Left = 3
+          Top = 224
           Width = 284
           Height = 7
           Shape = bsBottomLine
         end
         object Bevel2: TBevel
-          Left = 1
-          Top = 225
+          Left = 3
+          Top = 119
           Width = 284
           Height = 7
           Shape = bsBottomLine
-        end
-        object Bevel3: TBevel
-          Left = 3
-          Top = 184
-          Width = 284
-          Height = 7
-          Shape = bsBottomLine
-        end
-        object lblIntervalType: TLabel
-          Left = 95
-          Top = 91
-          Width = 44
-          Height = 13
-          Caption = 'Intervalo'
-        end
-        object lblOffset: TLabel
-          Left = 3
-          Top = 91
-          Width = 31
-          Height = 13
-          Caption = 'Offset'
-        end
-        object lblFactor: TLabel
-          Left = 167
-          Top = 91
-          Width = 26
-          Height = 13
-          Caption = 'Fator'
-        end
-        object lblAdjustType: TLabel
-          Left = 3
-          Top = 138
-          Width = 31
-          Height = 13
-          Caption = 'Ajuste'
         end
         object Bevel4: TBevel
           Left = 3
@@ -720,7 +688,7 @@ object frmClient: TfrmClient
         end
         object edtAgentId: TSpinEdit
           Left = 52
-          Top = 197
+          Top = 91
           Width = 69
           Height = 22
           MaxValue = 0
@@ -730,149 +698,106 @@ object frmClient: TfrmClient
         end
         object dateStartMd: TDateTimePicker
           Left = 3
-          Top = 257
-          Width = 142
+          Top = 151
+          Width = 94
           Height = 21
           Date = 44790.000000000000000000
-          Format = 'dd/MM/yyyy HH:mm:ss'
-          Time = 0.002749872684944421
+          Format = 'dd/MM/yyyy'
+          Time = 44790.000000000000000000
           TabOrder = 3
         end
         object dateEndMd: TDateTimePicker
           Left = 3
-          Top = 303
-          Width = 142
+          Top = 197
+          Width = 94
           Height = 21
           Date = 44790.000000000000000000
-          Format = 'dd/MM/yyyy HH:mm:ss'
-          Time = 0.002749872684944421
-          TabOrder = 4
+          Format = 'dd/MM/yyyy'
+          Time = 44790.000000000000000000
+          TabOrder = 6
         end
         object edtBookPos: TEdit
           Left = 3
-          Top = 344
+          Top = 237
           Width = 43
           Height = 21
-          TabOrder = 5
+          TabOrder = 9
           Text = '1'
         end
         object mmBookPos: TMemo
           Left = 3
-          Top = 371
+          Top = 265
           Width = 284
           Height = 117
           ReadOnly = True
           ScrollBars = ssBoth
-          TabOrder = 6
+          TabOrder = 10
         end
         object btnBookPos: TButton
           Left = 52
-          Top = 344
+          Top = 237
           Width = 130
           Height = 21
           Caption = 'Buscar oferta'
-          TabOrder = 7
+          TabOrder = 11
           OnClick = btnBookPosClick
         end
         object edtQuoteIDStart: TSpinEdit
-          Left = 151
-          Top = 256
-          Width = 136
+          Left = 183
+          Top = 151
+          Width = 104
+          Height = 22
+          MaxValue = 0
+          MinValue = 0
+          TabOrder = 5
+          Value = 0
+        end
+        object edtQuoteIDEnd: TSpinEdit
+          Left = 183
+          Top = 196
+          Width = 104
           Height = 22
           MaxValue = 0
           MinValue = 0
           TabOrder = 8
           Value = 0
         end
-        object edtQuoteIDEnd: TSpinEdit
-          Left = 153
-          Top = 303
-          Width = 136
-          Height = 22
-          MaxValue = 0
-          MinValue = 0
-          TabOrder = 9
-          Value = 0
-        end
-        object cbIntervalType: TComboBox
-          Left = 95
-          Top = 110
-          Width = 66
-          Height = 21
-          Style = csDropDownList
-          ItemIndex = 0
-          TabOrder = 10
-          Text = 'Trade'
-          Items.Strings = (
-            'Trade'
-            'Minute'
-            'Day'
-            'Week'
-            'Month'
-            'Year'
-            'Aggressor'
-            'Lot'
-            'Variation'
-            'Inversion'
-            'Quantity'
-            'Renko'
-            'Range'
-            'Point Figure'
-            'Kagi'
-            'Price Action'
-            'Variation Inversion'
-            'Second'
-            'Volume Profile')
-        end
-        object edtOffset: TSpinEdit
-          Left = 3
-          Top = 110
-          Width = 86
-          Height = 22
-          MaxValue = 100000
-          MinValue = 1
-          TabOrder = 11
-          Value = 1
-        end
-        object edtFactor: TSpinEdit
-          Left = 167
-          Top = 110
-          Width = 86
-          Height = 22
-          MaxValue = 100000
-          MinValue = 1
-          TabOrder = 12
-          Value = 1
-        end
-        object cbAdjustType: TComboBox
-          Left = 3
-          Top = 157
-          Width = 158
-          Height = 21
-          Style = csDropDownList
-          ItemIndex = 0
-          TabOrder = 13
-          Text = 'Nenhum'
-          Items.Strings = (
-            'Nenhum'
-            'Dividendos e Juros'
-            'Splits e Agrupamentos'
-            'Todos')
-        end
         object cbBookSide: TComboBox
           Left = 188
-          Top = 344
+          Top = 237
           Width = 99
           Height = 22
           AutoCloseUp = True
           Style = csOwnerDrawVariable
           ItemIndex = 0
-          TabOrder = 14
+          TabOrder = 12
           Text = 'Compra'
           OnChange = cbFunctionsChange
           Items.Strings = (
             'Compra'
             'Venda')
+        end
+        object timeStartMD: TDateTimePicker
+          Left = 103
+          Top = 151
+          Width = 74
+          Height = 21
+          Date = 44790.000000000000000000
+          Format = 'HH:mm:ss'
+          Time = 44790.000000000000000000
+          Kind = dtkTime
+          TabOrder = 4
+        end
+        object timeEndMD: TDateTimePicker
+          Left = 103
+          Top = 197
+          Width = 74
+          Height = 21
+          Date = 44790.000000000000000000
+          Format = 'HH:mm:ss'
+          Time = 44790.000000000000000000
+          Kind = dtkTime
+          TabOrder = 7
         end
       end
       object tabConfig: TTabSheet

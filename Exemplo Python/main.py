@@ -1,9 +1,9 @@
 #Imports para execução da DLL
-from ctypes import WINFUNCTYPE, byref, c_int32, c_size_t, create_unicode_buffer
+from ctypes import WINFUNCTYPE, byref, c_int32, c_size_t, create_unicode_buffer, cast, c_wchar_p
 from datetime import datetime, timedelta
 from getpass import getpass
 import struct
-
+import traceback
 from profitTypes import *
 from profit_dll import initializeDll
 
@@ -240,10 +240,33 @@ def stateCallback(nType, nResult):
 
     return
 
+@WINFUNCTYPE(None, c_int32)
+def healthCallback(nState):
+    # Estado agregado: Frozen se QUALQUER thread interna (Main ou Calc)
+    # estiver travada, sem distinguir qual.
+    state = TSystemHealthState(nState).name
+
+    print(f'HealthCallback: {state}')
+    return
+
 @WINFUNCTYPE(None, TAssetID, c_int)
 def progressCallBack(assetId, nProgress):
     print(assetId.ticker + ' | Progress | ' + str(nProgress))
     return
+
+TC_LAST_PACKET = 2
+
+@WINFUNCTYPE(None, TConnectorAssetIdentifierSafe, c_size_t, c_uint)
+def historyTradeCallback(assetSafe, pTrade, flags):
+    ticker_name = cast(assetSafe.Ticker, c_wchar_p).value if assetSafe.Ticker else ""
+    is_last = bool(flags & TC_LAST_PACKET)
+    trade = TConnectorTrade(Version=0)
+
+    if profit_dll.TranslateTrade(pTrade, byref(trade)) == NL_OK:
+        print(f'THistoryTradeCallback: {ticker_name} | '
+              f'{trade.TradeDate.wDay:02d}/{trade.TradeDate.wMonth:02d}/{trade.TradeDate.wYear} '
+              f'{trade.TradeDate.wHour:02d}:{trade.TradeDate.wMinute:02d}:{trade.TradeDate.wSecond:02d} | '
+              f'{trade.Price} | {trade.Quantity} | Last={is_last}')
 
 @WINFUNCTYPE(None, c_int, c_wchar_p, c_wchar_p, c_wchar_p)
 def accountCallback(nCorretora, corretoraNomeCompleto, accountID, nomeTitular):
@@ -313,6 +336,13 @@ def priceDepthCallback(assetId : TConnectorAssetIdentifier, side : int, position
             pass
     return
 
+@WINFUNCTYPE(None, POINTER(TConnectorTradingMessageResult))
+def tradingMessageResultCallback(a_Result):
+    result = a_Result.contents
+
+    print(f'TradingMessageResultCallback: {result.BrokerID} | {result.MessageID} | {result.Message}')
+    return
+
 
 @WINFUNCTYPE(None, TConnectorAssetIdentifier, c_size_t, c_uint)
 def tradeCallback(assetId, pTrade, flags):
@@ -359,8 +389,9 @@ def descript_offer_array_v2(offer_array):
     flags = struct.unpack('I', trailer[0:4])[0]
 
     is_last = bool(flags & 1)
+    is_first = bool(flags & 2)
 
-    print(f"OfferBook: Qtd: {qtd_offer} | Size: {pointer_size} | Last: {is_last}")
+    print(f"OfferBook: Qtd: {qtd_offer} | Size: {pointer_size} | First: {is_first} Last: {is_last}")
 
     # tendo a quantidade, podemos ler as ofertas
 
@@ -447,7 +478,7 @@ def assetListInfoCallback(assetId, strName, strDescription, iMinOrdQtd, iMaxOrdQ
           'Descrição: ' + str(strDescription))
     return
 
-@WINFUNCTYPE(None, TAssetID, c_wchar_p, c_wchar_p, c_int, c_int, c_int, c_int, c_int, c_double, c_double, c_wchar_p, c_wchar_p, c_wchar_p, c_wchar_p, c_wchar_p)
+@WINFUNCTYPE(None, TAssetID, c_wchar_p, c_wchar_p, c_int64, c_int64, c_int64, c_int, c_int, c_double, c_double, c_wchar_p, c_wchar_p, c_wchar_p, c_wchar_p, c_wchar_p)
 def assetListInfoCallbackV2(assetId, strName, strDescription, iMinOrdQtd, iMaxOrdQtd, iLote, iSecurityType, iSecuritySubType, dMinPriceInc, dContractMult, strValidDate, strISIN, strSetor, strSubSetor, strSegmento):
     print('TAssetListInfoCallbackV2 = Ticker: ' + str(assetId.ticker) +
           'Name: ' + str(strName) +
@@ -644,6 +675,19 @@ def printLastAdjusted():
     result = profit_dll.GetLastDailyClose(c_wchar_p("MGLU3"), c_wchar_p("B"), byref(close), 1)
     print(f'Last session close: {close}, result={str(result)}')
 
+def printHealthStatus():
+    # Lado "pull" do healthcheck: sempre responde, mesmo se a Main ou o Calc
+    # da própria DLL estiverem travados — só lê o estado agregado do watchdog
+    # interno (Frozen se QUALQUER thread interna estiver travada).
+    state = c_int()
+
+    result = profit_dll.GetHealthStatus(byref(state))
+
+    if not evalDllReturn("GetHealthStatus", result):
+        return
+
+    print("HealthStatus: {0}".format(TSystemHealthState(state.value).name))
+
 def printPosition():
     ticker = input('Asset: ')
     exchange = input('Bolsa: ')
@@ -693,10 +737,11 @@ def doZeroPosition():
     positionType = int(input("Tipo da Posisão (1 - DayTrade, 2 - Consolidado): "))
 
     zeroRec = TConnectorZeroPosition(
-        Version=1,
+        Version=2,
         PositionType = positionType,
         Password = rotPassword,
-        Price = -1.0
+        Price = -1.0,
+        MessageID=-1
     )
     zeroRec.AccountID = TConnectorAccountIdentifier(
         Version=0,
@@ -716,7 +761,7 @@ def doZeroPosition():
     if not evalDllReturn("SendZeroPositionV2", ret):
         return
 
-    print("ZeroOrderID: {0}".format(ret))
+    print("ZeroOrderID: {0} | MessageID=".format(ret, zeroRec.MessageID))
 
 def dllStart():
     try:
@@ -747,14 +792,19 @@ def dllStart():
 
         profit_dll.SetBrokerAccountListChangedCallback(BrokerAccountListChangedCallback)
         profit_dll.SetBrokerSubAccountListChangedCallback(BrokerSubAccountListChangedCallback)
-
+        profit_dll.SetHistoryTradeCallbackV2(historyTradeCallback)
         profit_dll.SetPriceDepthCallback(priceDepthCallback)
+
+        profit_dll.SetTradingMessageResultCallback(tradingMessageResultCallback)
+
+        profit_dll.SetHealthCallback(healthCallback)
 
         print('DLLInitialize: ' + str(result))
         wait_login()
 
     except Exception as e:
-        print(str(e))
+        print("ERRO FATAL NA INICIALIZAÇÃO DA DLL:")
+        traceback.print_exc() 
 
 def dllEnd():
     result = profit_dll.DLLFinalize()
@@ -778,13 +828,14 @@ def buyStopOrder():
     amount = int(input('Quantidade: '))
 
     send_order = TConnectorSendOrder(
-        Version = 1,
+        Version = 2,
         Password = rotPassword,
         OrderType = TConnectorOrderType.Stop.value,
         OrderSide = TConnectorOrderSide.Buy.value,
         Price = price,
         StopPrice = stopPrice,
-        Quantity = amount
+        Quantity = amount,
+        MessageID=-1
     )
     send_order.AccountID = TConnectorAccountIdentifier(
         Version=0,
@@ -803,7 +854,7 @@ def buyStopOrder():
     profitID = profit_dll.SendOrder(byref(send_order))
 
     if evalDllReturn("SendOrder", profitID):
-        print("ProfitID: " + str(profitID))
+        print("ProfitID: " + str(profitID) + " MessageID=" + str(send_order.MessageID))
 
 def sellStopOrder():
     brokerId = int(input("Corretora: "))
@@ -818,13 +869,14 @@ def sellStopOrder():
     amount = int(input('Quantidade: '))
 
     send_order = TConnectorSendOrder(
-        Version = 0,
+        Version = 2,
         Password = rotPassword,
         OrderType = TConnectorOrderType.Stop.value,
         OrderSide = TConnectorOrderSide.Sell.value,
         Price = price,
         StopPrice = stopPrice,
-        Quantity = amount
+        Quantity = amount,
+        MessageID=-1
     )
     send_order.AccountID = TConnectorAccountIdentifier(
         Version=0,
@@ -843,7 +895,7 @@ def sellStopOrder():
     profitID = profit_dll.SendOrder(byref(send_order))
 
     if evalDllReturn("SendOrder", profitID):
-        print("ProfitID: " + str(profitID))
+        print("ProfitID: " + str(profitID) + " MessageID=" + str(send_order.MessageID))
 
 def sendBuyMarketOrder():
     brokerId = int(input("Corretora: "))
@@ -856,13 +908,14 @@ def sendBuyMarketOrder():
     amount = int(input('Quantidade: '))
 
     send_order = TConnectorSendOrder(
-        Version = 0,
+        Version = 2,
         Password = rotPassword,
         OrderType = TConnectorOrderType.Market.value,
         OrderSide = TConnectorOrderSide.Buy.value,
         Price = -1,
         StopPrice = -1,
-        Quantity = amount
+        Quantity = amount,
+        MessageID = -1
     )
     send_order.AccountID = TConnectorAccountIdentifier(
         Version=0,
@@ -881,7 +934,7 @@ def sendBuyMarketOrder():
     profitID = profit_dll.SendOrder(byref(send_order))
 
     if evalDllReturn("SendOrder", profitID):
-        print("ProfitID: " + str(profitID))
+        print("ProfitID: " + str(profitID) + " MessageID=" + str(send_order.MessageID))
 
 def sendSellMarketOrder():
     brokerId = int(input("Corretora: "))
@@ -894,13 +947,14 @@ def sendSellMarketOrder():
     amount = int(input('Quantidade: '))
 
     send_order = TConnectorSendOrder(
-        Version = 0,
+        Version = 2,
         Password = rotPassword,
         OrderType = TConnectorOrderType.Market.value,
         OrderSide = TConnectorOrderSide.Sell.value,
         Price = -1,
         StopPrice = -1,
-        Quantity = amount
+        Quantity = amount,
+        MessageID = -1
     )
     send_order.AccountID = TConnectorAccountIdentifier(
         Version=0,
@@ -919,7 +973,7 @@ def sendSellMarketOrder():
     profitID = profit_dll.SendOrder(byref(send_order))
 
     if evalDllReturn("SendOrder", profitID):
-        print("ProfitID: " + str(profitID))
+        print("ProfitID: " + str(profitID) + " MessageID=" + str(send_order.MessageID))
 
 def getOrders():
     brokerId = input("Corretora: ")
@@ -947,6 +1001,23 @@ def getOrder():
 
     printOrder("GetOrder", order_id)
 
+def requestSerieHistory():
+    asset = input('Asset: ')
+    bolsa = input('Bolsa: ')
+    
+    # Vamos testar com 5 MINUTOS
+    fim = datetime.now()
+    inicio = fim - timedelta(minutes=5) 
+    
+    str_inicio = inicio.strftime("%d/%m/%Y %H:%M:%S")
+    str_fim = fim.strftime("%d/%m/%Y %H:%M:%S")
+
+    print(f"Buscando histórico de {str_inicio} até {str_fim}...")
+
+    result = profit_dll.GetHistoryTrades(c_wchar_p(asset), c_wchar_p(bolsa), c_wchar_p(str_inicio), c_wchar_p(str_fim))
+    
+    evalDllReturn("GetHistoryTrades", result)
+
 def cancelOrder():
     brokerId = int(input("Corretora: "))
     accountId = input("Conta: ")
@@ -955,8 +1026,9 @@ def cancelOrder():
     cl_ord_id = input('ClOrdID: ')
 
     cancel_order = TConnectorCancelOrder(
-        Version=0,
-        Password=rotPassword
+        Version=1,
+        Password=rotPassword,
+        MessageID=-1
     )
     cancel_order.OrderID = TConnectorOrderIdentifier(
         Version=0,
@@ -1006,11 +1078,12 @@ def changeOrder():
     amount = int(input('Quantidade: '))
 
     change_order = TConnectorChangeOrder(
-        Version = 0,
+        Version = 1,
         Password = rotPassword,
         Price = price,
         StopPrice = -1,
-        Quantity = amount
+        Quantity = amount,
+        MessageID = -1
     )
     change_order.AccountID = TConnectorAccountIdentifier(
         Version=0,
@@ -1253,6 +1326,10 @@ if __name__ == '__main__':
             GetAgentName()
         elif strInput == 'getPositionAssets':
             GetPositionAssets()
+        elif strInput == 'requestHistory':
+            requestSerieHistory()
+        elif strInput == 'healthStatus':
+            printHealthStatus()
 
 
     dllEnd()

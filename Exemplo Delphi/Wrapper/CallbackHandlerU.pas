@@ -101,9 +101,9 @@ uses
     rAssetID            : TAssetIDRec;
     pwcName             : PWideChar;
     pwcDescription      : PWideChar;
-    nMinOrderQtd        : Integer;
-    nMaxOrderQtd        : Integer;
-    nLote               : Integer;
+    nMinOrderQtd        : Int64;
+    nMaxOrderQtd        : Int64;
+    nLote               : Int64;
     stSecurityType      : Integer;
     ssSecuritySubType   : Integer;
     sMinPriceIncrement  : Double;
@@ -116,9 +116,9 @@ uses
     rAssetID            : TAssetIDRec;
     pwcName             : PWideChar;
     pwcDescription      : PWideChar;
-    nMinOrderQtd        : Integer;
-    nMaxOrderQtd        : Integer;
-    nLote               : Integer;
+    nMinOrderQtd        : Int64;
+    nMaxOrderQtd        : Int64;
+    nLote               : Int64;
     stSecurityType      : Integer;
     ssSecuritySubType   : Integer;
     sMinPriceIncrement  : Double;
@@ -218,6 +218,10 @@ uses
     const a_UpdateType : Byte
   ); stdcall;
 
+  procedure TradingMessageResultCallback(
+    const a_pResult : PConnectorTradingMessageResult
+  ); stdcall;
+
 implementation
 
 uses
@@ -294,7 +298,7 @@ end;
 ///****************************************************************************
 /// AssetListInfoCallback
 ///****************************************************************************
-procedure AssetListInfoCallback (rAssetID : TAssetIDRec; pwcName, pwcDescription : PwideChar; nMinOrderQtd, nMaxOrderQtd, nLote, stSecurityType, ssSecuritySubType : Integer; sMinPriceIncrement, sContractMultiplier : Double; strValidDate, strISIN : PwideChar);
+procedure AssetListInfoCallback (rAssetID : TAssetIDRec; pwcName, pwcDescription : PwideChar; nMinOrderQtd, nMaxOrderQtd, nLote: Int64 ; stSecurityType, ssSecuritySubType : Integer; sMinPriceIncrement, sContractMultiplier : Double; strValidDate, strISIN : PwideChar);
 begin
   GenericLogUpdate(Format('TAssetListInfoCallback: %s | %s | %s | %s | %s | %s |', [rAssetId.pchTicker, pwcName, strValidDate, strISIN, GetEnumName(TypeInfo(TSecurityType), stSecurityType), GetEnumName(TypeInfo(TSecuritySubType), ssSecuritySubType)]));
 end;
@@ -302,7 +306,7 @@ end;
 ///****************************************************************************
 /// AssetListInfoCallbackV2
 ///****************************************************************************
-procedure AssetListInfoCallbackV2 (rAssetID : TAssetIDRec; pwcName, pwcDescription : PwideChar; nMinOrderQtd, nMaxOrderQtd, nLote, stSecurityType, ssSecuritySubType : Integer; sMinPriceIncrement, sContractMultiplier : Double; strValidDate, strISIN, strSetor, strSubSetor, strSegmento : PwideChar);
+procedure AssetListInfoCallbackV2 (rAssetID : TAssetIDRec; pwcName, pwcDescription : PwideChar;nMinOrderQtd, nMaxOrderQtd, nLote: Int64 ; stSecurityType, ssSecuritySubType : Integer; sMinPriceIncrement, sContractMultiplier : Double; strValidDate, strISIN, strSetor, strSubSetor, strSegmento : PwideChar);
 begin
   GenericLogUpdate(Format('TAssetListInfoCallbackV2: %s | %s | %s | %s | %s | %s | %s', [rAssetId.pchTicker, pwcName, strValidDate, strISIN, strSetor, strSubSetor, StrSegmento]));
 end;
@@ -590,6 +594,17 @@ begin
     // utPrepare indicates that there will be more than 1 notification
     // utFlush indicates that all notifications happened
   end;
+end;
+
+procedure TradingMessageResultCallback(const a_pResult : PConnectorTradingMessageResult);
+begin
+  GenericLogUpdate('TradingMessageResultCallback:' +
+    ' ' + IntToStr(a_pResult.BrokerID) +
+    ' | ' + a_pResult.OrderID.ClOrderID +
+    ' | ' + IntToStr(a_pResult.MessageID) +
+    ' | ' + TConnectorTradingMessageResultCode(a_pResult.ResultCode).ToString +
+    ' | ' + a_pResult.Message
+  );
 end;
 
 end.

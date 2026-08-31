@@ -18,7 +18,9 @@ type
                      cmdConnecting         = 1,
                      cmdConnectedWaiting   = 2,
                      cmdConnectedNotLogged = 3,
-                     cmdConnectedLogged    = 4);
+                     cmdConnectedLogged    = 4,
+                     cmdPerformanceWarning = 5,
+                     cmdPartialConnected   = 6);
 
   TConnRoteamento = (crDisconnected       = 0,
                      crConnecting         = 1,

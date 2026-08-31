@@ -30,8 +30,7 @@ const
   MD_HAS_AGENT          : Cardinal = 2;
   MD_HAS_DATE_RANGE     : Cardinal = 4;
   MD_HAS_BOOK           : Cardinal = 8;
-  MD_HAS_SERIE          : Cardinal = 16;
-  MD_HAS_QUOTE_ID_RANGE : Cardinal = 32;
+  MD_HAS_QUOTE_ID_RANGE : Cardinal = 16;
 
   RT_HAS_ACCOUNT        : Cardinal = 1;
   RT_HAS_SUB_ACCOUNT    : Cardinal = 2;
@@ -70,7 +69,6 @@ type
     m_bHasAgent        : Boolean;
     m_HasDateRange     : Boolean;
     m_bHasBook         : Boolean;
-    m_bHasSerie        : Boolean;
     m_bHasQuoteIDRange : Boolean;
 
   public
@@ -78,7 +76,6 @@ type
     property HasAgent        : Boolean read m_bHasAgent;
     property HasDateRange    : Boolean read m_HasDateRange;
     property HasBook         : Boolean read m_bHasBook;
-    property HasSerie        : Boolean read m_bHasSerie;
     property HasQuoteIDRange : Boolean read m_bHasQuoteIDRange;
 
     constructor Create(const a_nControlFlags : Cardinal; const a_bIsDeprecated : Boolean; const a_strNewFunction : String = '');
@@ -220,17 +217,10 @@ type
     edtQuoteIDStart: TSpinEdit;
     edtQuoteIDEnd: TSpinEdit;
     Bevel2: TBevel;
-    Bevel3: TBevel;
-    cbIntervalType: TComboBox;
-    lblIntervalType: TLabel;
-    edtOffset: TSpinEdit;
-    lblOffset: TLabel;
-    edtFactor: TSpinEdit;
-    lblFactor: TLabel;
-    cbAdjustType: TComboBox;
-    lblAdjustType: TLabel;
     Bevel4: TBevel;
     cbBookSide: TComboBox;
+    timeStartMD: TDateTimePicker;
+    timeEndMD: TDateTimePicker;
     procedure FormCreate(Sender: TObject);
     procedure btnInitializeClick(Sender: TObject);
     procedure btnFinalizeClick(Sender: TObject);
@@ -269,12 +259,12 @@ type
 
     function DoGetTheoreticalValues      : Integer;
 
-    function DoSendOrder                 : Int64;
-    function DoSendChangeOrderV2         : Integer;
-    function DoSendCancelOrderV2         : Integer;
+    function DoSendOrder(out a_nMessageID : Int64) : Int64;
+    function DoSendChangeOrderV2(out a_nMessageID : Int64)  : Integer;
+    function DoSendCancelOrderV2(out a_nMessageID : Int64)  : Integer;
     function DoSendCancelOrdersV2        : Integer;
     function DoSendCancelAllOrdersV2     : Integer;
-    function DoSendZeroPositionV2        : Int64;
+    function DoSendZeroPositionV2(out a_nMessageID : Int64) : Int64;
     function DoGetAccountCount           : Integer;
     function DoGetAccounts               : Integer;
     function DoGetAccountDetails         : Integer;
@@ -408,8 +398,13 @@ begin
       SetBrokerSubAccountListChangedCallback(BrokerSubAccountListChangedCallback);
 
       SetAssetPositionListCallback(AssetPositionListCallback);
+
+      SetHistoryTradeCallbackV2(HistoryTradeCallback);
+
       // setar essa callback desabilita SetOrderCallback **SOMENTE** quando for histórico de ordem
       SetOrderHistoryCallback(OrderHistoryCallback);
+
+      SetTradingMessageResultCallback(TradingMessageResultCallback);
     end;
 end;
 
@@ -585,19 +580,22 @@ end;
 
 procedure TfrmClient.btnExecuteClick(Sender: TObject);
 var
-  sText: String;
-  nRes: Int64;
-  sRes: String;
-  pRes: Pointer;
+  sText      : String;
+  nRes       : Int64;
+  sRes       : String;
+  pRes       : Pointer;
+  nMessageID : Int64;
 begin
   // executa cada funcao da dll //
 
   sText:= cbFunctions.Items.Strings[cbFunctions.ItemIndex];
   if cbFunctions.ItemIndex <> -1 then
   begin
-    nRes:= -1;
-    sRes:= EmptyStr;
-    pRes:= nil;
+    nRes       := -1;
+    sRes       := EmptyStr;
+    pRes       := nil;
+    nMessageID := -1;
+
     mmFunc.Lines.Clear;
 
     if sText = 'SubscribeTicker' then
@@ -687,12 +685,12 @@ begin
                   PWideChar(edtTickerRot.Text), PWideChar(cbBolsaRot.Items.Strings[cbBolsaRot.ItemIndex]))
     else if sText = 'GetHistoryTrades' then
       nRes:= GetHistoryTrades(PWideChar(edtTickerMd.Text), PWideChar(cbBolsaMd.Items.Strings[cbBolsaMd.ItemIndex]),
-                       PWideChar(DateTimeToStr(dateStartMd.DateTime)),
-                       PWideChar(DateTimeToStr(dateEndMd.DateTime)))
+                       PWideChar(DateTimeToStr(dateStartMd.Date + timeStartMd.Time)),
+                       PWideChar(DateTimeToStr(dateEndMd.Date + timeEndMd.Time)))
     else if sText = 'GetSerieHistory' then
       nRes:= GetSerieHistory(PWideChar(edtTickerMd.Text), PWideChar(cbBolsaMd.Items.Strings[cbBolsaMd.ItemIndex]),
-                       PWideChar(DateTimeToStr(dateStartMd.DateTime)),
-                       PWideChar(DateTimeToStr(dateEndMd.DateTime)), 0, 0)
+                       PWideChar(DateTimeToStr(dateStartMd.Date + timeStartMd.Time)),
+                       PWideChar(DateTimeToStr(dateEndMd.Date + timeEndMd.Time)), 0, 0)
     else if sText = 'RequestTickerInfo' then
       nRes:= RequestTickerInfo(PWideChar(edtTickerMd.Text), PWideChar(cbBolsaMd.Items.Strings[cbBolsaMd.ItemIndex]))
     else if sText = 'SubscribeAdjustHistory' then
@@ -706,17 +704,17 @@ begin
     else if sText = 'GetTheoreticalValues' then
       nRes := DoGetTheoreticalValues
     else if sText = 'SendOrder' then
-      nRes := DoSendOrder
+      nRes := DoSendOrder(nMessageID)
     else if sText = 'SendChangeOrderV2' then
-      nRes := DoSendChangeOrderV2
+      nRes := DoSendChangeOrderV2(nMessageID)
     else if sText = 'SendCancelOrderV2' then
-      nRes := DoSendCancelOrderV2
+      nRes := DoSendCancelOrderV2(nMessageID)
     else if sText = 'SendCancelOrdersV2' then
       nRes := DoSendCancelOrdersV2
     else if sText = 'SendCancelAllOrdersV2' then
       nRes := DoSendCancelAllOrdersV2
     else if sText = 'SendZeroPositionV2' then
-      nRes := DoSendZeroPositionV2
+      nRes := DoSendZeroPositionV2(nMessageID)
     else if sText = 'GetAccountCount' then
       nRes := DoGetAccountCount
     else if sText = 'GetAccounts' then
@@ -745,7 +743,11 @@ begin
       nRes := DoEnumerateAllPositionAssets;
 
     if nRes <> -1 then
-      mmFunc.Lines.Add(sText + ': ' + NResultToString(nRes))
+      begin
+        if nMessageID <> -1
+          then mmFunc.Lines.Add(sText + ': ' + NResultToString(nRes) + ' | MessageID=' + nMessageID.ToString)
+          else mmFunc.Lines.Add(sText + ': ' + NResultToString(nRes));
+      end
     else if sRes <> EmptyStr then
       mmFunc.Lines.Add(Format(sText + ': %s', [sRes]))
     else if pRes <> nil then
@@ -822,11 +824,11 @@ begin
     GenericLogUpdate(Format('GetTheoreticalValues: %s:%s | %n %d', [AssetID.Ticker, AssetID.Exchange, dPrice, nQtd]));
 end;
 
-function TfrmClient.DoSendOrder : Int64;
+function TfrmClient.DoSendOrder(out a_nMessageID : Int64)  : Int64;
 var
   pSendOrder : TConnectorSendOrder;
 begin
-  pSendOrder.Version := 1;
+  pSendOrder.Version := 2;
 
   pSendOrder.AccountID := GetAccountID;
   pSendOrder.AssetID   := GetAssetIDRot;
@@ -854,16 +856,20 @@ begin
 
   pSendOrder.Quantity := StrToInt64Def(edtAmountRot.Text, -1);
 
+  pSendOrder.MessageID := -1;
+
   Result := SendOrder(@pSendOrder);
+
+  a_nMessageID := pSendOrder.MessageID;
 end;
 
-function TfrmClient.DoSendChangeOrderV2 : Integer;
+function TfrmClient.DoSendChangeOrderV2(out a_nMessageID : Int64)  : Integer;
 var
   pChangeOrder : PConnectorChangeOrder;
 begin
   New(pChangeOrder);
   try
-    pChangeOrder.Version := 0;
+    pChangeOrder.Version := 1;
 
     pChangeOrder.AccountID := GetAccountID;
     pChangeOrder.OrderID   := GetOrderID;
@@ -871,26 +877,32 @@ begin
     pChangeOrder.Price     := StrToFloatDef(edtPriceRot.Text, -1);
     pChangeOrder.StopPrice := StrToFloatDef(edtPriceStopRot.Text, -1);
     pChangeOrder.Quantity  := StrToInt64(edtAmountRot.Text);
+    pChangeOrder.MessageID := -1;
 
     Result := SendChangeOrderV2(pChangeOrder);
+
+    a_nMessageID := pChangeOrder.MessageID;
   finally
     Dispose(pChangeOrder);
   end;
 end;
 
-function TfrmClient.DoSendCancelOrderV2 : Integer;
+function TfrmClient.DoSendCancelOrderV2(out a_nMessageID : Int64)  : Integer;
 var
   pCancelOrder : PConnectorCancelOrder;
 begin
   New(pCancelOrder);
   try
-    pCancelOrder.Version := 0;
+    pCancelOrder.Version := 1;
 
     pCancelOrder.AccountID := GetAccountID;
     pCancelOrder.OrderID   := GetOrderID;
     pCancelOrder.Password  := PWideChar(edtPassRot.Text);
+    pCancelOrder.MessageID := -1;
 
     Result := SendCancelOrderV2(pCancelOrder);
+
+    a_nMessageID := pCancelOrder.MessageID;
   finally
     Dispose(pCancelOrder);
   end;
@@ -931,13 +943,13 @@ begin
   end;
 end;
 
-function TfrmClient.DoSendZeroPositionV2 : Int64;
+function TfrmClient.DoSendZeroPositionV2(out a_nMessageID : Int64)  : Int64;
 var
   pZeroPosition : PConnectorZeroPosition;
 begin
   New(pZeroPosition);
   try
-    pZeroPosition.Version := 1;
+    pZeroPosition.Version := 2;
 
     pZeroPosition.AccountID := GetAccountID;
     pZeroPosition.AssetID   := GetAssetIDRot;
@@ -945,12 +957,16 @@ begin
 
     pZeroPosition.PositionType := cbPositionType.ItemIndex + 1;
 
+    pZeroPosition.MessageID := -1;
+
     // mercado
     if cbOrderType.ItemIndex <> 2
       then pZeroPosition.Price := StrToFloat(edtPriceRot.Text)
       else pZeroPosition.Price := -1;
 
     Result := SendZeroPositionV2(pZeroPosition);
+
+    a_nMessageID := pZeroPosition.MessageID;
   finally
     Dispose(pZeroPosition);
   end;
@@ -1029,6 +1045,8 @@ var
   nTotalAcc : Integer;
   nIndex    : Integer;
 begin
+  Result := -1;
+
   nTotalAcc := DoGetAccountCountByBroker;
 
   if nTotalAcc > 0 then
@@ -1099,7 +1117,7 @@ begin
   Result := GetPositionV2(Position);
 
   if Result = NL_OK then
-    mmUpdates.Lines.Add('GetPositionV2: Qtd=' + Position.OpenQuantity.ToString + ' Price=' + Position.OpenAveragePrice.ToString + ' Side=' + Position.OpenSide.ToString + ' LastEvent=' + Position.EventID.ToString);
+    mmUpdates.Lines.Add('GetPositionV2: Qtd=' + Position.OpenQuantity.ToString + ' Price=' + Position.OpenAveragePrice.ToString + ' Side=' + Position.OpenSide.ToString + ' EventID=' + Position.EventID.ToString);
 end;
 
 function TfrmClient.DoGetOrderDetails : Integer;
@@ -1271,12 +1289,11 @@ procedure TfrmClient.ServerClock(AText: String);
 var
   lDate: TDateTime;
   lYear, lMonth, lDay, lHour, lMin, lSec, lMilisec: Integer;
-  lData: TDateTime;
   nRes: Cardinal;
 begin
   nRes:= GetServerClock(lDate, lYear, lMonth, lDay, lHour, lMin, lSec, lMilisec);
 
-  mmFunc.Lines.Add(Format(AText + ': 0x%x | %s', [nRes, DateTimeToStr(lData)]));
+  mmFunc.Lines.Add(Format(AText + ': 0x%x | %s', [nRes, DateTimeToStr(lDate)]));
 end;
 
 procedure TfrmClient.LastDailyClose(AText: String);
@@ -1487,23 +1504,16 @@ begin
       lbBolsaMd.Enabled       := mdFunction.HasAsset;
       cbBolsaMd.Enabled       := mdFunction.HasAsset;
 
-      lblOffset.Enabled       := mdFunction.HasSerie;
-      edtOffset.Enabled       := mdFunction.HasSerie;
-      lblIntervalType.Enabled := mdFunction.HasSerie;
-      cbIntervalType.Enabled  := mdFunction.HasSerie;
-      lblFactor.Enabled       := mdFunction.HasSerie;
-      edtFactor.Enabled       := mdFunction.HasSerie;
-      lblAdjustType.Enabled   := mdFunction.HasSerie;
-      cbAdjustType.Enabled    := mdFunction.HasSerie;
-
       lbAgentIdMd.Enabled     := mdFunction.HasAgent;
       edtAgentId.Enabled      := mdFunction.HasAgent;
 
       lbDateStartMd.Enabled   := mdFunction.HasDateRange;
       dateStartMd.Enabled     := mdFunction.HasDateRange;
+      timeStartMd.Enabled     := mdFunction.HasDateRange;
       edtQuoteIDStart.Enabled := mdFunction.HasQuoteIDRange;
       lbDateEndMd.Enabled     := mdFunction.HasDateRange;
       dateEndMd.Enabled       := mdFunction.HasDateRange;
+      timeEndMd.Enabled       := mdFunction.HasDateRange;
       edtQuoteIDEnd.Enabled   := mdFunction.HasQuoteIDRange;
 
       edtBookPos.Enabled      := mdFunction.HasBook;
@@ -1711,18 +1721,25 @@ var
   Offer     : PGroupOffer;
   nFlags    : Cardinal;
 const
-  OB_LAST_PACKET : Cardinal = 1;
+  OB_LAST_PACKET  : Cardinal = 1;
+  OB_FIRST_PACKET : Cardinal = 2;
 begin
-  for nIndex := 0 to ATarget.Count - 1 do
-    begin
-      Offer := ATarget[nIndex];
-      Dispose(Offer);
-    end;
-  ATarget.Clear;
-
   pBuffer := ASouce;
   nQtd := PInteger(@pBuffer[0])^;
   nTam := PInteger(@pBuffer[4])^;
+
+  nFlags := PCardinal(@pBuffer[8 + 49 * nQtd])^;
+
+  if ((nFlags and OB_FIRST_PACKET) = OB_FIRST_PACKET) then
+    begin
+      for nIndex := 0 to ATarget.Count - 1 do
+        begin
+          Offer := ATarget[nIndex];
+          Dispose(Offer);
+        end;
+      ATarget.Clear;
+    end;
+
   nStart := 8;
   for nIndex := 0 to nQtd - 1 do
     begin
@@ -1762,7 +1779,7 @@ begin
       ATarget.Add(Offer);
     end;
 
-  nFlags := PCardinal(@pBuffer[nStart])^;
+  // skip flags
   nStart := nStart + 4;
 
   FreePointer(ASouce, nStart);
@@ -1780,18 +1797,25 @@ var
   Offer     : PGroupOffer;
   nFlags    : Cardinal;
 const
-  OB_LAST_PACKET : Cardinal = 1;
+  OB_LAST_PACKET  : Cardinal = 1;
+  OB_FIRST_PACKET : Cardinal = 2;
 begin
-  for nIndex := 0 to ATarget.Count - 1 do
-    begin
-      Offer := ATarget[nIndex];
-      Dispose(Offer);
-    end;
-  ATarget.Clear;
-
   pBuffer := ASouce;
   nQtd := PInteger(@pBuffer[0])^;
   nTam := PInteger(@pBuffer[4])^;
+
+  nFlags := PCardinal(@pBuffer[8 + 53 * nQtd])^;
+
+  if ((nFlags and OB_FIRST_PACKET) = OB_FIRST_PACKET) then
+    begin
+      for nIndex := 0 to ATarget.Count - 1 do
+        begin
+          Offer := ATarget[nIndex];
+          Dispose(Offer);
+        end;
+      ATarget.Clear;
+    end;
+
   nStart := 8;
   for nIndex := 0 to nQtd - 1 do
     begin
@@ -1830,7 +1854,7 @@ begin
 
       ATarget.Add(Offer);
     end;
-  nFlags := PCardinal(@pBuffer[nStart])^;
+  // skip flags
   nStart := nStart + 4;
 
   FreePointer(ASouce, nStart);
@@ -1983,7 +2007,6 @@ begin
   m_bHasAgent        := HasFlag(a_nControlFlags, MD_HAS_AGENT);
   m_HasDateRange     := HasFlag(a_nControlFlags, MD_HAS_DATE_RANGE);
   m_bHasBook         := HasFlag(a_nControlFlags, MD_HAS_BOOK);
-  m_bHasSerie        := HasFlag(a_nControlFlags, MD_HAS_SERIE);
   m_bHasQuoteIDRange := HasFlag(a_nControlFlags, MD_HAS_QUOTE_ID_RANGE);
 end;
 

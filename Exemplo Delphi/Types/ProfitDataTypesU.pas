@@ -54,6 +54,51 @@ type
     bsNone = 255
   );
 
+  TConnectorTradingMessageResultCode = (
+    mrcStarting                       = 0,
+    mrcNotConnected                   = 1,
+    mrcSentToHadesProxy               = 2,
+    mrcRejectedMercury                = 3,
+    mrcSentToHades                    = 4,
+    mrcRejectedHades                  = 5,
+    mrcSentToBroker                   = 6,
+    mrcRejectedBroker                 = 7,
+    mrcSentToMarket                   = 8,
+    mrcRejectedMarket                 = 9,
+    mrcAccepted                       = 10,
+    mrcMarginTypeChangeRejected       = 11,
+    mrcPositionModeChangeRejected     = 12,
+    mrcNeedUpdateFromServer           = 13,
+    mrcSentToWallet                   = 17,
+    mrcBlockedByRisk                  = 24,
+    mrcSubAccount                     = 50,
+    mrcSubAccountPlan                 = 51,
+    mrcSubAccountResetLimit           = 52,
+    mrcSubAccountBrokerage            = 53,
+    mrcSubAccountBrokeragePrefix      = 54,
+    mrcSubAccountGroup                = 55,
+    mrcSubAccountGroupInsertion       = 56,
+    mrcRiskGroup                      = 60,
+    mrcRiskPrefix                     = 61,
+    mrcRiskAccount                    = 62,
+    mrcResetPasswordResult            = 63,
+    mrcFinEditTradeResultSucess       = 70,
+    mrcFinTradeResultErro             = 71,
+    mrcSubAccountPrefixSuccess        = 74,
+    mrcSubAccountPrefixError          = 75,
+    mrcFinancialLossSuccess           = 76,
+    mrcInvalidData                    = 77,
+    mrcInvalidWalletTransfer          = 78,
+    mrcSubAccountAssetsUpdateSuccess  = 79,
+    mrcSubAccountAssetsUpdateError    = 80,
+    mrcUnknown                        = 200
+  );
+
+  TConnectorTradingMessageResultCodeHelper = record Helper for TConnectorTradingMessageResultCode
+  public
+    function ToString : String;
+  end;
+
   TConnectorAccountIdentifier = record
     Version : Byte;
 
@@ -131,6 +176,9 @@ type
     Price     : Double;
     StopPrice : Double;
     Quantity  : Int64;
+
+    // V1
+    MessageID : Int64;
   end;
   PConnectorSendOrder = ^TConnectorSendOrder;
 
@@ -145,6 +193,9 @@ type
     Price     : Double;
     StopPrice : Double;
     Quantity  : Int64;
+
+    // V1
+    MessageID : Int64;
   end;
   PConnectorChangeOrder = ^TConnectorChangeOrder;
 
@@ -155,6 +206,9 @@ type
     AccountID : TConnectorAccountIdentifier;
     OrderID   : TConnectorOrderIdentifier;
     Password  : PWideChar;
+
+    // V1
+    MessageID : Int64;
   end;
   PConnectorCancelOrder = ^TConnectorCancelOrder;
 
@@ -188,6 +242,9 @@ type
 
     // V1
     PositionType : Byte;
+
+    // V2
+    MessageID : Int64;
   end;
   PConnectorZeroPosition = ^TConnectorZeroPosition;
 
@@ -317,6 +374,19 @@ type
   end;
   PConnectorOrderOut = ^TConnectorOrderOut;
 
+  TConnectorTradingMessageResult = record
+    Version : Byte;
+
+    // V0
+    BrokerID      : Integer;
+    OrderID       : TConnectorOrderIdentifier;
+    MessageID     : Int64;
+    ResultCode    : Byte; // TBrokerMessageResultCode
+    Message       : PWideChar;
+    MessageLength : Integer;
+  end;
+  PConnectorTradingMessageResult = ^TConnectorTradingMessageResult;
+
   TConnectorTrade = record
     Version     : Byte;
 
@@ -353,5 +423,52 @@ const
   PG_IS_THEORIC     : Cardinal = 1;
 
 implementation
+
+uses
+  System.SysUtils;
+
+function TConnectorTradingMessageResultCodeHelper.ToString : String;
+begin
+  case Self of
+    mrcStarting                       : Result := 'Starting';
+    mrcNotConnected                   : Result := 'NotConnectedServer';
+    mrcSentToHadesProxy               : Result := 'SentToHadesProxy';
+    mrcRejectedMercury                : Result := 'RejectedMercuryLegacy';
+    mrcSentToHades                    : Result := 'SentToHades';
+    mrcRejectedHades                  : Result := 'RejectedHades';
+    mrcSentToBroker                   : Result := 'SentToBroker';
+    mrcRejectedBroker                 : Result := 'RejectedBroker';
+    mrcSentToMarket                   : Result := 'SentToMarket';
+    mrcRejectedMarket                 : Result := 'RejectedMarket';
+    mrcAccepted                       : Result := 'Accepted';
+    mrcMarginTypeChangeRejected       : Result := 'MarginTypeChangeRejected';
+    mrcPositionModeChangeRejected     : Result := 'PositionModeChangeRejected';
+    mrcNeedUpdateFromServer           : Result := 'NeedUpdateFromServer';
+    mrcBlockedByRisk                  : Result := 'BlockedByRisk';
+    mrcSubAccount                     : Result := 'SubAccount';
+    mrcSubAccountPlan                 : Result := 'SubAccountPlan';
+    mrcSubAccountResetLimit           : Result := 'SubAccountResetLimit';
+    mrcSubAccountBrokerage            : Result := 'SubAccountBrokerage';
+    mrcSubAccountBrokeragePrefix      : Result := 'SubAccountBrokeragePrefix';
+    mrcSubAccountGroup                : Result := 'SubAccountGroup';
+    mrcSubAccountGroupInsertion       : Result := 'SubAccountGroupInsertion';
+    mrcRiskGroup                      : Result := 'RiskGroup';
+    mrcRiskPrefix                     : Result := 'RiskPrefix';
+    mrcRiskAccount                    : Result := 'RiskAccount';
+    mrcResetPasswordResult            : Result := 'ResetPasswordResult';
+    mrcFinEditTradeResultSucess       : Result := 'FinEditTradeResultSucess';
+    mrcFinTradeResultErro             : Result := 'FinTradeResultErro';
+    mrcSubAccountPrefixSuccess        : Result := 'SubAccountPrefixSuccess';
+    mrcSubAccountPrefixError          : Result := 'SubAccountPrefixError';
+    mrcFinancialLossSuccess           : Result := 'FinancialLossSuccess';
+    mrcInvalidData                    : Result := 'InvalidData';
+    mrcInvalidWalletTransfer          : Result := 'InvalidWalletTransfer';
+    mrcSubAccountAssetsUpdateSuccess  : Result := 'SubAccountAssetsUpdateSuccess';
+    mrcSubAccountAssetsUpdateError    : Result := 'SubAccountAssetsUpdateError';
+    mrcUnknown                        : Result := 'Unknown';
+  else
+    Result := IntToStr(Integer(Self));
+  end;
+end;
 
 end.

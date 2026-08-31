@@ -1,5 +1,5 @@
-from enum import Enum
-from ctypes import POINTER, WINFUNCTYPE, Structure, c_bool, c_double, c_int, c_int64, c_long, c_longlong, c_ubyte, c_uint, c_ushort, c_wchar, c_wchar_p
+from enum import Enum, IntEnum
+from ctypes import POINTER, WINFUNCTYPE, Structure, c_bool, c_double, c_int, c_int64, c_long, c_longlong, c_ubyte, c_uint, c_ushort, c_wchar, c_wchar_p, c_void_p, c_size_t
 
 class TConnectorOrderType(Enum):
     Limit = 2
@@ -13,6 +13,73 @@ class TConnectorOrderSide(Enum):
 class TConnectorPositionType(Enum):
     DayTrade = 1
     Consolidated = 2
+
+class TTradeType(IntEnum):
+    CrossTrade      = 1
+    AggressorBuyer  = 2   # Agressor de compra (BUY)
+    AggressorSeller = 3   # Agressor de venda (SELL)
+    Auction         = 4
+    Surveillance    = 5
+    Expit           = 6
+    OptionExercise  = 7
+    OverTheCounter  = 8
+    DerivativeTerm  = 9
+    Index           = 10
+    BTC             = 11
+    OnBehalf        = 12
+    RLP             = 13
+    BBT             = 14  # Block Book Trade
+    RFQ             = 15  # Request For Trade
+    MPT             = 16  # Midpoint Trade
+    TAC             = 17  # Trade at Close
+    TAA             = 18  # Trade At Average
+    Unknown         = 32
+    Update          = 33
+    Mid             = 34
+    OffExchange     = 35
+
+class TSystemHealthState(IntEnum):
+    Responsive = 0
+    Frozen     = 1
+
+class TConnectorTradingMessageResultCode(Enum):
+    Starting                       = 0
+    NotConnected                   = 1
+    SentToHadesProxy               = 2
+    RejectedMercury                = 3
+    SentToHades                    = 4
+    RejectedHades                  = 5
+    SentToBroker                   = 6
+    RejectedBroker                 = 7
+    SentToMarket                   = 8
+    RejectedMarket                 = 9
+    Accepted                       = 10
+    MarginTypeChangeRejected       = 11
+    PositionModeChangeRejected     = 12
+    NeedUpdateFromServer           = 13
+    SentToWallet                   = 17
+    BlockedByRisk                  = 24
+    SubAccount                     = 50
+    SubAccountPlan                 = 51
+    SubAccountResetLimit           = 52
+    SubAccountBrokerage            = 53
+    SubAccountBrokeragePrefix      = 54
+    SubAccountGroup                = 55
+    SubAccountGroupInsertion       = 56
+    RiskGroup                      = 60
+    RiskPrefix                     = 61
+    RiskAccount                    = 62
+    ResetPasswordResult            = 63
+    FinEditTradeResultSucess       = 70
+    FinTradeResultErro             = 71
+    SubAccountPrefixSuccess        = 74
+    SubAccountPrefixError          = 75
+    FinancialLossSuccess           = 76
+    InvalidData                    = 77
+    InvalidWalletTransfer          = 78
+    SubAccountAssetsUpdateSuccess  = 79
+    SubAccountAssetsUpdateError    = 80
+    Unknown                        = 200
 
 class SystemTime(Structure):
     _fields_ = [
@@ -90,7 +157,10 @@ class TConnectorSendOrder(Structure):
         ("OrderSide", c_ubyte),
         ("Price", c_double),
         ("StopPrice", c_double),
-        ("Quantity", c_int64)
+        ("Quantity", c_int64),
+
+        # V2
+        ("MessageID", c_int64)
     ]
 
 class TConnectorChangeOrder(Structure):
@@ -101,7 +171,10 @@ class TConnectorChangeOrder(Structure):
         ("Password", c_wchar_p),
         ("Price", c_double),
         ("StopPrice", c_double),
-        ("Quantity", c_int64)
+        ("Quantity", c_int64),
+
+        # V1
+        ("MessageID", c_int64)
     ]
 
 class TConnectorCancelOrder(Structure):
@@ -109,7 +182,10 @@ class TConnectorCancelOrder(Structure):
         ("Version", c_ubyte),
         ("AccountID", TConnectorAccountIdentifier),
         ("OrderID", TConnectorOrderIdentifier),
-        ("Password", c_wchar_p)
+        ("Password", c_wchar_p),
+
+        # V1
+        ("MessageID", c_int64)
     ]
 
 class TConnectorCancelOrders(Structure):
@@ -134,7 +210,10 @@ class TConnectorZeroPosition(Structure):
         ("AssetID", TConnectorAssetIdentifier),
         ("Password", c_wchar_p),
         ("Price", c_double),
-        ("PositionType", c_ubyte)
+        ("PositionType", c_ubyte),
+
+        # V2
+        ("MessageID", c_int64)
     ]
 
 class TConnectorTradingAccountOut(Structure):
@@ -236,7 +315,7 @@ class TConnectorTrade(Structure):
         ("Volume", c_double),
         ("BuyAgent", c_int),
         ("SellAgent", c_int),
-        ("TradeType", c_ubyte)
+        ("TradeType", c_ubyte)  # ver TTradeType
     ]
 
 class TAssetID(Structure):
@@ -257,6 +336,19 @@ class TGroupPrice(Structure):
     _fields_ = [("nQtd", c_int),
                 ("nCount", c_int),
                 ("sPrice", c_double)]
+
+class TConnectorTradingMessageResult(Structure):
+    _fields_ = [
+        ("Version", c_ubyte),
+
+        # V0
+        ("BrokerID", c_int),
+        ("OrderID", TConnectorOrderIdentifier),
+        ("MessageID", c_int64),
+        ("ResultCode", c_ubyte), # TBrokerMessageResultCode
+        ("Message", c_wchar_p),
+        ("MessageLength", c_int)
+    ]
 
 class TNewTradeCallback(Structure):
     _fields_ = [("assetId", TAssetID),
@@ -372,7 +464,7 @@ class TOfferBookCallbackV2(Structure):
                 ("date", c_wchar_p),
                 ("pArraySell", POINTER(c_int)),
                 ("pArrayBuy", POINTER(c_int))]
-    
+
 
 TConnectorEnumerateOrdersProc = WINFUNCTYPE(
     c_bool,
@@ -384,4 +476,24 @@ TConnectorEnumerateAssetProc = WINFUNCTYPE(
     c_bool,
     POINTER(TConnectorAssetIdentifier),
     c_long
+)
+
+TConnectorTradingMessageResultCallback = WINFUNCTYPE(
+    None,
+    POINTER(TConnectorTradingMessageResult)
+)
+
+class TConnectorAssetIdentifierSafe(Structure):
+    _fields_ = [
+        ("Version", c_ubyte),
+        ("Ticker", c_void_p),  
+        ("Exchange", c_void_p), 
+        ("FeedType", c_ubyte)
+    ]
+
+TConnectorTradeCallback = WINFUNCTYPE(
+    None,
+    TConnectorAssetIdentifierSafe, 
+    c_size_t,                  
+    c_uint                     # flags
 )
