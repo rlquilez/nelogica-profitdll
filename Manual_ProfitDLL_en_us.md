@@ -208,10 +208,15 @@ Conversion reference cited by the manual:
   the PDF's vertical spacing. Line breaks present in the vendor's own text
   (e.g. `SubscribePriceDepth` declared over two lines) were kept.
 - **Manual vs. code divergence:** the error-code table in the 4.0.0.42 manual
-  does not list `NL_PASSWORD_HASH_SHA1` (`0x80000007`) or
-  `NL_PASSWORD_HASH_MD5` (`0x80000008`), although both exist in the Delphi
-  header shipped with the DLL (`ProfitConstantsU.pas`). Treat both codes as
-  valid.
+  lists 32 codes, but the Delphi header shipped with the DLL
+  (`ProfitConstantsU.pas`) defines 47. The 15 that exist only in the header —
+  `NL_PASSWORD_HASH_SHA1` (`0x80000007`), `NL_PASSWORD_HASH_MD5`
+  (`0x80000008`) and the range `0x80000021`–`0x8000002D` (`NL_NOT_MY_TRADE`,
+  `NL_NOT_EQUALS`, `NL_INVALID_DLL_AUTH`, `NL_INVALID_SIGNATURE`,
+  `NL_NOT_IMPLEMENTED`, `NL_BROKER_NOT_ALLOWED`, `NL_FILE_NOT_EXISTS`,
+  `NL_NTSL_PARSE_FAILED`, `NL_NTSL_TOO_MANY_ASSETS`, `NL_NOT_CONSISTENT`,
+  `NL_SINGLE_THREADED`, `NL_NOT_SAME_THREAD`, `NL_TIMEOUT`) — are valid
+  return values; the table with values and meanings is in `README_EN.md`.
 - **Layout defects of the official English PDF repaired here:** the heading
   `3. Library Interface` is printed as a numbered-list item merged with the
   following paragraph (restored as a `##` heading); the bold paragraph

@@ -17,13 +17,19 @@ repository. It gathers:
 3. **The code examples for four languages** distributed by Nelogica (Python,
    C#, C++ and Delphi), kept exactly as received, as a reference for real API
    usage.
+4. **External references**, in the *Extras* section at the end of this README:
+   the official DLL download link, Nelogica's help center with its articles
+   about the DLL, a summary table of every Nelogica blog post about Data
+   Solution, and community projects that use ProfitDLL from C# and Python.
 
 | File | Content |
 |---|---|
 | [`Manual_ProfitDLL_en_us.md`](Manual_ProfitDLL_en_us.md) | Complete 4.0.0.42 manual in English (78 converted pages) |
 | [`Manual_ProfitDLL_pt_br.md`](Manual_ProfitDLL_pt_br.md) | Complete 4.0.0.42 manual in Portuguese (79 converted pages) |
-| `Manual - ProfitDLL en_us.pdf` / `pt_br.pdf` | Official Nelogica PDFs (source of the conversions) |
+| `Manual - ProfitDLL en_us.pdf` / `pt_br.pdf` | Official Nelogica 4.0.0.42 PDFs (source of the conversions) |
 | `Exemplo Python/`, `Exemplo C#/`, `Exemplo C++/`, `Exemplo Delphi/` | Official vendor examples |
+| *Extras* section of this README | Official download, help center, Nelogica blog posts and community projects |
+| `CLAUDE.md` | Maintenance rules of the repository for coding agents: what goes into the manuals versus the READMEs, and how to regenerate the conversion |
 
 > **`ProfitDLL.dll` is not in this repository.** It is proprietary and licensed
 > by Nelogica. Nothing here runs without the DLL, an activation key and account
@@ -49,6 +55,9 @@ The Markdown manuals are structured specifically for agent retrieval:
 - **Below the `---` separator the content is the official PDF's**, in the same
   order and wording; manual-versus-code divergences are annotated in the
   preamble, not silently dropped.
+- **External resources live in this README, not in the manuals:** the official
+  links, the blog posts and the community projects are in the *Extras*
+  section, so that the manuals remain a faithful copy of the PDF.
 
 Point your agent at the manual in the language you want and it has the full API
 reference without ever opening the PDF.
@@ -79,9 +88,21 @@ routing services.
 
 ## Examples per language
 
-All of them are interactive console/GUI programs: they prompt for key, user and
-password, initialise the DLL and enter a typed-command loop (`subscribe`,
-`send order`, `get position`, `getHistoryTrades`, `exit`, …).
+The four examples do the same thing — initialise the DLL with an activation
+key, user and password and run functions on demand — but each collects that
+input differently:
+
+- **Python** prompts for key, user and password in the terminal and enters a
+  typed-command loop (`subscribe`, `offerbook`, `position`, `buyAtMarket`,
+  `getHistoryTrades`, `healthStatus`, `exit`, …).
+- **C#** prompts for user, password and key in the terminal; its command loop
+  uses its own names (`subscribe`, `send order`, `get position`,
+  `request history`, `exit`, …).
+- **C++** holds key, user, password, account and broker as constants at the
+  top of `main()` (marked *Preencher*, "fill in") and runs a fixed script of
+  calls, with no command loop.
+- **Delphi** is a VCL form with fields for the credentials and a list of
+  functions to trigger.
 
 ```bash
 # Python — requires 3.10+ (main.py uses "X | None" annotations; breaks on 3.9).
@@ -117,6 +138,11 @@ When looking at one of them, the equivalent file in the others is:
 Files prefixed with `Legacy` hold the older API (see *Deprecated APIs* in the
 manual). C#/Delphi link statically by DLL name; Python uses `ctypes.WinDLL`;
 C++ resolves each symbol with `LoadLibrary`/`GetProcAddress`.
+
+API coverage is not identical across them: only the Python example binds the
+health APIs (`GetHealthStatus`, `SetHealthCallback`, `TSystemHealthState`),
+and the C# example kept its `request history` command while Python renamed
+its own to `getHistoryTrades` in 4.0.0.42.
 
 ## Core concepts
 
@@ -193,8 +219,28 @@ count-then-fill APIs (`GetAccountCount` → `GetAccounts`).
 
 `NL_OK` is `0`; errors are negative (`NL_INTERNAL_ERROR = 0x80000001`).
 Order-sending functions return a **positive LocalOrderID** on success — so test
-for `< 0`, not `!= 0`. The full table is in the manual; the canonical
-enumeration is `Exemplo Delphi/Types/ProfitConstantsU.pas`.
+for `< 0`, not `!= 0`. The manual's table lists 32 codes; the canonical
+enumeration, `Exemplo Delphi/Types/ProfitConstantsU.pas`, defines 47. The 15
+that exist only in the Delphi header (13 of them added since 4.0.0.31) are
+valid return values and are listed here so that no code goes unnamed:
+
+| Code | Value | Meaning (header comment) |
+|---|---|---|
+| `NL_PASSWORD_HASH_SHA1` | `0x80000007` | Password is not SHA1-hashed |
+| `NL_PASSWORD_HASH_MD5` | `0x80000008` | Password is not MD5-hashed |
+| `NL_NOT_MY_TRADE` | `0x80000021` | Trade/offer does not belong to any of the user's accounts |
+| `NL_NOT_EQUALS` | `0x80000022` | Two resources are not equal |
+| `NL_INVALID_DLL_AUTH` | `0x80000023` | DLL not validated by HMAC |
+| `NL_INVALID_SIGNATURE` | `0x80000024` | DLL could not validate the executable |
+| `NL_NOT_IMPLEMENTED` | `0x80000025` | Feature not implemented yet |
+| `NL_BROKER_NOT_ALLOWED` | `0x80000026` | Broker has no access to the back-office resource |
+| `NL_FILE_NOT_EXISTS` | `0x80000027` | File does not exist |
+| `NL_NTSL_PARSE_FAILED` | `0x80000028` | Language parse failed |
+| `NL_NTSL_TOO_MANY_ASSETS` | `0x80000029` | Too many assets used in the NTSL code |
+| `NL_NOT_CONSISTENT` | `0x8000002A` | Resource is not considered consistent |
+| `NL_SINGLE_THREADED` | `0x8000002B` | (no comment in the header) |
+| `NL_NOT_SAME_THREAD` | `0x8000002C` | (no comment in the header) |
+| `NL_TIMEOUT` | `0x8000002D` | (no comment in the header) |
 
 ### Connection is a four-channel state machine
 
@@ -277,7 +323,9 @@ disk.
 | `nTradeType` 14–18 | BBT, RFQ, MPT, TAC, TAA | 4.0.0.41 |
 | `nTradeType` 33–35 | Update, Mid, Off Exchange | 4.0.0.41 |
 
-On top of these, the `NResult` enumeration gained 14 new codes since 4.0.0.31.
+On top of these, `ProfitConstantsU.pas` gained 14 `NResult` codes since
+4.0.0.31, but only `NL_HISTORY_PERIOD_LIMIT` made it into the manual's table —
+the others are listed under *`NResult` return codes*.
 
 ### ABI change — attention
 

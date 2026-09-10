@@ -210,10 +210,15 @@ Referência de conversão citada pelo manual:
   no texto do fabricante (ex.: `SubscribePriceDepth` declarada em duas linhas)
   foram mantidas.
 - **Divergência manual × código:** a tabela de códigos de erro do manual
-  4.0.0.42 não lista `NL_PASSWORD_HASH_SHA1` (`0x80000007`) nem
-  `NL_PASSWORD_HASH_MD5` (`0x80000008`), embora ambos existam no cabeçalho
-  Delphi distribuído com a DLL (`ProfitConstantsU.pas`). Considere os dois
-  códigos válidos.
+  4.0.0.42 lista 32 códigos, mas o cabeçalho Delphi distribuído com a DLL
+  (`ProfitConstantsU.pas`) define 47. Os 15 que só existem no cabeçalho —
+  `NL_PASSWORD_HASH_SHA1` (`0x80000007`), `NL_PASSWORD_HASH_MD5`
+  (`0x80000008`) e a faixa `0x80000021`–`0x8000002D` (`NL_NOT_MY_TRADE`,
+  `NL_NOT_EQUALS`, `NL_INVALID_DLL_AUTH`, `NL_INVALID_SIGNATURE`,
+  `NL_NOT_IMPLEMENTED`, `NL_BROKER_NOT_ALLOWED`, `NL_FILE_NOT_EXISTS`,
+  `NL_NTSL_PARSE_FAILED`, `NL_NTSL_TOO_MANY_ASSETS`, `NL_NOT_CONSISTENT`,
+  `NL_SINGLE_THREADED`, `NL_NOT_SAME_THREAD`, `NL_TIMEOUT`) — são retornos
+  válidos; a tabela com valores e significados está no `README.md`.
 - **Divergência manual × wrapper Delphi:** cinco funções são declaradas em
   `Exemplo Delphi/Wrapper/` mas não aparecem em nenhuma seção do manual —
   `InitializeCustom`, `ConnectorSetServerAndPort`,

@@ -97,9 +97,12 @@ expensive):
 
 These are real and should not be "fixed" silently if they resurface:
 
-- The 4.0.0.42 error table omits `NL_PASSWORD_HASH_SHA1` (`0x80000007`) and
-  `NL_PASSWORD_HASH_MD5` (`0x80000008`), though both exist in
-  `Exemplo Delphi/Types/ProfitConstantsU.pas`.
+- The 4.0.0.42 error table lists 32 codes; `Exemplo Delphi/Types/ProfitConstantsU.pas`
+  defines 47. The 15 header-only codes are `NL_PASSWORD_HASH_SHA1`/`_MD5`
+  (`0x80000007`/`08`) and the range `0x80000021`–`0x8000002D`
+  (`NL_NOT_MY_TRADE` … `NL_TIMEOUT`); 13 of them were added to the header
+  since 4.0.0.31 while the manual's table only gained `NL_HISTORY_PERIOD_LIMIT`.
+  The READMEs list them with values and meanings.
 - Five functions are declared in `Exemplo Delphi/Wrapper/` but appear nowhere in
   the manual: `InitializeCustom`, `ConnectorSetServerAndPort`,
   `ConnectorSetServerAndPortRoteamento`, `GetSerieHistory`, `GetLocationInfo`.
@@ -167,7 +170,14 @@ allocate, second call returns content. Same for `GetAgentNameLength` →
 
 **Returns are `NResult`:** `NL_OK` is `0`, errors negative. Order-sending
 functions return a positive LocalOrderID, so test `< 0`, not `!= 0`. Canonical
-list: `Exemplo Delphi/Types/ProfitConstantsU.pas`.
+list: `Exemplo Delphi/Types/ProfitConstantsU.pas` (47 codes; the manual's table
+has 32).
+
+**The four examples differ in coverage and input.** Python and C# prompt for
+credentials and run a typed-command loop (different command vocabularies; only
+Python renamed its history command to `getHistoryTrades`); C++ keeps
+credentials as constants in `main()` and runs a fixed script; Delphi is a VCL
+form. Only the Python example binds the health APIs.
 
 **Two API generations coexist.** `Legacy*` files hold the flat string-argument
 API; the current API is the versioned `TConnector*` family. `DLLInitializeLogin`
