@@ -12,9 +12,9 @@ The deliverables are:
 
 | File | Role |
 |---|---|
-| `Manual_ProfitDLL_pt_br.md` | Primary artefact — full 4.0.0.41 manual, pt-BR |
-| `Manual_ProfitDLL_en_us.md` | Primary artefact — full 4.0.0.41 manual, en-US |
-| `README.md` / `README_EN.md` | Entry point describing the repo and core DLL concepts |
+| `Manual_ProfitDLL_pt_br.md` | Primary artefact — full 4.0.0.42 manual, pt-BR |
+| `Manual_ProfitDLL_en_us.md` | Primary artefact — full 4.0.0.42 manual, en-US |
+| `README.md` / `README_EN.md` | Entry point describing the repo, core DLL concepts and the *Extras* (official links, blog posts, community projects) |
 | `Manual - ProfitDLL *.pdf` | Official Nelogica PDFs — the source of the conversions |
 | `Exemplo {Python,C#,C++,Delphi}/` | Vendor's own examples, kept verbatim as usage reference |
 
@@ -27,64 +27,101 @@ normal work.
 When work here means "update the docs", the unit of work is the Markdown
 manuals and the READMEs.
 
+## Where things live
+
+- **The manuals are a faithful copy of the PDF** below the `---` separator:
+  same order, headings, wording, lists, tables, quotes and bold text. Above the
+  separator sits a hand-maintained preamble for agents (front-matter, usage
+  rules, version delta, deprecated-API table, quick index, type mapping,
+  conversion notes). Nothing else is added to the manuals.
+- **Everything that is not the vendor's manual goes to the READMEs**: the
+  *Extras* section (official download link, help-center section and articles,
+  the blog-post table, community repositories and acknowledgements), the
+  troubleshooting table and the core-concepts notes. Keep it out of the manuals.
+- `https://desenvolvedores.nelogica.com.br/` no longer resolves (checked
+  2026-09-10); the official documentation link is the help center's
+  *DataFeed - DLL* section.
+
 ## Regenerating the manuals from the PDFs
 
 The two Markdown manuals are conversions of the official PDFs, not hand-written
-files. When Nelogica ships a new version, the PDFs are replaced and the manuals
-are regenerated rather than edited by hand.
+files. When Nelogica ships a new version, the PDFs are replaced and the vendor
+part of the manuals is regenerated rather than edited by hand; the preamble is
+then updated by hand (version, date, page count, delta, index, notes).
 
-Facts that make the conversion possible (rediscovering these is expensive):
+The converter script is intentionally **not** in the repository (only finished
+Markdown ships here); it is kept outside the repo in the maintainer's local
+tooling. Facts that make the conversion possible (rediscovering these is
+expensive):
 
 - The PDFs are **Chrome print-to-PDF renders of Nelogica's own Markdown**
-  (`Producer: Skia/PDF`). The page footer literally reads
+  (`Producer: Skia/PDF`, `HeadlessChrome`). The page footer literally reads
   `Manual_ProfitDLL_pt_br.md · <date> · N / 79`, which is where the target
-  filenames come from.
-- `pdftotext`/poppler is **not** installed on this machine, and `Read` cannot
-  render these PDFs. Extraction is done with a standalone script that inflates
-  the `FlateDecode` content streams and decodes each `/ToUnicode` CMap
-  **per font resource of the page** — using a merged CMap across fonts produces
-  corrupted text.
-- Structure is recovered from font role plus geometry, not from guessing:
-
-  | Signal | Meaning |
-  |---|---|
-  | size 28 / 21 / 16.4 | `#` / `##` / `###` |
-  | `SegoeUI-Bold` at x=20 | `####` label |
-  | `Consolas` alone at x=60, inside §3.1/§3.2 | `#### \`ApiName\`` |
-  | x=44 | code block |
-  | x=20 | paragraph |
-  | x=30 or x≥70, multi-column | table |
-  | `ArialMT` | running footer — discard |
-
-- Headings render letter-by-letter and words split mid-token (`wat chdog`);
-  merging adjacent same-role spans repairs this.
-- Table columns must be assigned from **raw** spans; merging spans first fuses
-  adjacent columns. Wrapped cells appear as separate lines that interleave by
-  `y`, so rows and orphan fragments are matched in two passes using a
-  page-global `y`.
-
-The conversion scripts live in the session scratchpad, not in the repo — this
-repository intentionally ships only the finished Markdown.
+  filenames and the front-matter date come from (4.0.0.42: 79 pages pt-BR,
+  78 pages en-US, dated 2026-09-04).
+- `pdftotext`/poppler and every Python PDF library are **absent** on this
+  machine, and `Read` cannot render these PDFs. Extraction is done with a
+  standalone script in pure Python: objects are plain (no object streams),
+  content streams are `FlateDecode` with a direct `/Length`, fonts are
+  Type0/Identity-H with 2-byte CIDs, and each font has its **own `/ToUnicode`
+  CMap** (`bfchar` + `bfrange`) — using a merged CMap across fonts produces
+  corrupted text. Glyph widths come from `/W` of the CIDFontType2 descendant.
+  Walk `/Catalog → /Pages → /Kids` for page order; object numbers are not in
+  reading order.
+- **Structure comes from the tagged-PDF structure tree, not from geometry.**
+  `/StructTreeRoot → Document` holds `H1..H4`, `P`, `L/LI/Lbl`,
+  `Table/TR/TH/TD`, `BlockQuote`, `Strong`, `Em`, inline `Code` and
+  `Link/URI`; `<pre>` blocks are bare `NonStruct` children of `Document`/`LI`
+  in Consolas. Text runs are `/NonStruct <</MCID n>> BDC … EMC`. `/K` arrays mix
+  ints (MCID on the element's `/Pg`), `<</Type /MCR /Pg … /MCID …>>` dicts
+  (continuation on another page), references to child elements and `/OBJR`
+  entries (ignore) — parse the dicts out first, with `re.S`, or refs inside an
+  MCR are mistaken for children.
+- Geometry is used only inside a block: raw `Tm`/`Td` coordinates are CSS px
+  (body at x=20, `<pre>` at x=44, list text at x=60; sizes 28/21/16.37/14; y
+  is continuous through the whole document, not per page). Spans at a new `y`
+  inside a paragraph or cell are joined with a space; inside a code block they
+  are new lines. The `ArialMT` footer is untagged and discarded.
+- **Page-break artefacts:** a `TH` repeated on the next page carries a second
+  MCID with identical text (dedupe it, or headers read `NomeNome`); a code
+  block's blank lines show up as a 2× line gap (19 px → 38 px), and a print
+  soft-wrap shows up as a hanging space at the end of the line plus a next word
+  that would not have fitted before x≈707 — re-join those, but keep the line
+  breaks the vendor's own text has (e.g. `SubscribePriceDepth` is declared over
+  two lines in the source).
+- Editorial rule kept from the first conversion: in §3.1/§3.2 each API is a
+  list item whose first block is only the API name in `Code`; it is rendered as
+  `#### \`Name\`` with the parameter table and text at document level.
 
 ## Known divergences to preserve
 
 These are real and should not be "fixed" silently if they resurface:
 
-- The 4.0.0.41 error table omits `NL_PASSWORD_HASH_SHA1` (`0x80000007`) and
+- The 4.0.0.42 error table omits `NL_PASSWORD_HASH_SHA1` (`0x80000007`) and
   `NL_PASSWORD_HASH_MD5` (`0x80000008`), though both exist in
   `Exemplo Delphi/Types/ProfitConstantsU.pas`.
 - Five functions are declared in `Exemplo Delphi/Wrapper/` but appear nowhere in
   the manual: `InitializeCustom`, `ConnectorSetServerAndPort`,
   `ConnectorSetServerAndPortRoteamento`, `GetSerieHistory`, `GetLocationInfo`.
-- `RequestSerieHistory` is documented but bound by none of the four examples.
+- `RequestSerieHistory` was documented up to 4.0.0.41 (bound by none of the
+  four examples) and **removed from the manual in 4.0.0.42**; the Python
+  example renamed its `requestHistory` command to `getHistoryTrades` at the
+  same time. `GetHistoryTrades` is the only documented trade-history API.
 - The official **English** PDF has three layout defects that the conversion
-  repairs: `3. Library Interface` and ``Note on `MARKET_PARTIAL_CONNECTED` ``
-  lost their heading level and merged into the following paragraph, and the
-  changelog's `Bug Fixes` labels sit one level below their Portuguese
-  counterparts.
+  repairs: `3. Library Interface` is printed as a numbered-list item merged
+  with the following paragraph, the bold paragraph
+  ``Note on `MARKET_PARTIAL_CONNECTED` `` is merged into the paragraph after
+  it, and the changelog's `Bug Fixes` labels under 4.0.0.28 and 4.0.0.24 sit
+  one level below their Portuguese counterparts. In both PDFs the
+  `MARKET_PARTIAL_CONNECTED` note is a bold paragraph, not a heading.
 - The English PDF uses the Portuguese connector `" e "` in the heading
   `GetAgentNameByID e GetAgentShortNameByID`. That is the vendor's text; keep
-  it.
+  it. `SetEnabledHistOrder` sits in different positions in the two PDFs (after
+  `GetPosition` in pt-BR, after `GetTheoreticalValues` in en-US) — also the
+  vendor's.
+- The two PDFs format a few passages differently (pt-BR uses a code block and a
+  plain paragraph where en-US uses bullet lists, in `GetPosition` and
+  `UnsubscribePriceBook`); each manual follows its own PDF.
 
 ## Privacy constraint
 
@@ -92,11 +129,14 @@ The remote (`github.com/rlquilez/nelogica-profitdll`) is **public**. Everything
 committed here is published.
 
 Content in this repository must be derived **only** from the official Nelogica
-PDFs and the vendor's example code. Never carry notes, identifiers, environment
-variable names, internal function names, incident history or architectural
-decisions from any other codebase into these documents, even as an
-illustration — a previous draft of the manual had to be discarded for mixing in
-material from an unrelated private project.
+PDFs, the vendor's example code and Nelogica's public pages (help center, blog,
+download server) plus the two community repositories credited in the READMEs.
+Never carry notes, identifiers, environment variable names, internal function
+names, incident history or architectural decisions from any other codebase into
+these documents, even as an illustration — a previous draft of the manual had
+to be discarded for mixing in material from an unrelated private project. Do
+not publish personal e-mail addresses of the community authors; credit them by
+name and repository only.
 
 Before committing, scan the tracked files for such markers and stop if any
 appear.
@@ -141,6 +181,11 @@ register the modern replacements immediately after — see
 (ready `5`), `2` market data (ready `4`), `3` activation (ready `0`). Since
 4.0.0.39 market data also reports `MARKET_PERFORMANCE_WARNING` (5) and
 `MARKET_PARTIAL_CONNECTED` (6).
+
+**Trade history is window-limited.** `GetHistoryTrades` refuses a start date
+older than 30 days (`NL_HISTORY_PERIOD_LIMIT`) and, for `WIN*`/`WDO*` tickers,
+a range that reaches 10 days (`NL_INVALID_ARGS`); the vendor's own guidance is
+to request day by day and watch `TProgressCallback`.
 
 ## Conventions
 

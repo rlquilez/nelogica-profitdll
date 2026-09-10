@@ -1,6 +1,6 @@
 # ProfitDLL — Technical Documentation
 
-**Reference documentation for ProfitDLL 4.0.0.41 (Nelogica), in Markdown, prepared for consumption by AI agents.**
+**Reference documentation for ProfitDLL 4.0.0.42 (Nelogica), in Markdown, prepared for consumption by AI agents.**
 
 [Versão em português](README.md) · [Manual en-US](Manual_ProfitDLL_en_us.md) · [Manual pt-BR](Manual_ProfitDLL_pt_br.md)
 
@@ -20,14 +20,15 @@ repository. It gathers:
 
 | File | Content |
 |---|---|
-| [`Manual_ProfitDLL_en_us.md`](Manual_ProfitDLL_en_us.md) | Complete 4.0.0.41 manual in English (79 converted pages) |
-| [`Manual_ProfitDLL_pt_br.md`](Manual_ProfitDLL_pt_br.md) | Complete 4.0.0.41 manual in Portuguese |
+| [`Manual_ProfitDLL_en_us.md`](Manual_ProfitDLL_en_us.md) | Complete 4.0.0.42 manual in English (78 converted pages) |
+| [`Manual_ProfitDLL_pt_br.md`](Manual_ProfitDLL_pt_br.md) | Complete 4.0.0.42 manual in Portuguese (79 converted pages) |
 | `Manual - ProfitDLL en_us.pdf` / `pt_br.pdf` | Official Nelogica PDFs (source of the conversions) |
 | `Exemplo Python/`, `Exemplo C#/`, `Exemplo C++/`, `Exemplo Delphi/` | Official vendor examples |
 
 > **`ProfitDLL.dll` is not in this repository.** It is proprietary and licensed
 > by Nelogica. Nothing here runs without the DLL, an activation key and account
-> credentials.
+> credentials. The official package with the DLL, the manuals and the examples
+> is listed under [Extras → Official download](#official-profitdll-download).
 
 ## Using this with AI agents
 
@@ -42,13 +43,17 @@ The Markdown manuals are structured specifically for agent retrieval:
   deprecated APIs with their replacements, a quick index of every API, and a
   Delphi → C#/C++/Python type mapping.
 - **Parameter tables are preserved** (Name / Type / Description) for each
-  function.
-- **Manual-versus-code divergences are annotated**, not silently dropped.
+  function, with the cells exactly as in the PDF.
+- **Intact Delphi declarations:** lines that the PDF print wrapped were
+  re-joined, and every code block is a faithful copy of the original.
+- **Below the `---` separator the content is the official PDF's**, in the same
+  order and wording; manual-versus-code divergences are annotated in the
+  preamble, not silently dropped.
 
 Point your agent at the manual in the language you want and it has the full API
 reference without ever opening the PDF.
 
-## ProfitDLL 4.0.0.41 — overview
+## ProfitDLL 4.0.0.42 — overview
 
 ProfitDLL is Nelogica's library for integrating with B3 market data and order
 routing services.
@@ -66,7 +71,7 @@ routing services.
 | Real-time quotes and trades | `SubscribeTicker`, `SetTradeCallbackV2`, `TranslateTrade` |
 | Price book (depth) | `SubscribePriceDepth`, `GetPriceGroup`, `SetPriceDepthCallback` |
 | Offer book | `SubscribeOfferBook`, `SetOfferBookCallbackV2` |
-| History | `GetHistoryTrades`, `SetHistoryTradeCallbackV2` |
+| Trade history | `GetHistoryTrades` (30-day window; WIN/WDO in slices shorter than 10 days), `SetHistoryTradeCallbackV2` |
 | Order sending | `SendOrder`, `SendChangeOrderV2`, `SendCancelOrderV2` |
 | Position | `GetPositionV2`, `SendZeroPositionV2`, `EnumerateAllPositionAssets` |
 | Accounts and sub-accounts | `GetAccountCount`, `GetAccounts`, `GetAccountDetails`, `GetSubAccounts` |
@@ -76,7 +81,7 @@ routing services.
 
 All of them are interactive console/GUI programs: they prompt for key, user and
 password, initialise the DLL and enter a typed-command loop (`subscribe`,
-`send order`, `get position`, `exit`, …).
+`send order`, `get position`, `getHistoryTrades`, `exit`, …).
 
 ```bash
 # Python — requires 3.10+ (main.py uses "X | None" annotations; breaks on 3.9).
@@ -224,7 +229,31 @@ one-character code:
 
 The feed field is `0` (Nelogica) or `255` (other).
 
-## What is new in 4.0.0.31 → 4.0.0.41
+### Trade history has window limits
+
+`GetHistoryTrades` rejects requests whose start date is older than 30 days
+(`NL_HISTORY_PERIOD_LIMIT`). For tickers starting with `WIN` or `WDO`, the
+range between `dtDateStart` and `dtDateEnd` cannot reach 10 days
+(`NL_INVALID_ARGS`) — request the history of those contracts day by day and use
+`TProgressCallback` to detect the end of each load.
+
+## What is new in 4.0.0.31 → 4.0.0.42
+
+### 4.0.0.42 at a glance
+
+Bug-fix release: no API, structure or constant was added to or removed from
+the DLL.
+
+- **DLL:** fixed delayed delivery of order callbacks; fixed an exception when
+  performing a new `SubscribeOfferBook`; fixed the process identifier (PID)
+  sent by the DLL to the server.
+- **Manual:** `GetHistoryTrades` now documents the 30-day
+  (`NL_HISTORY_PERIOD_LIMIT`) and the 10-day WIN/WDO (`NL_INVALID_ARGS`)
+  limits; the `RequestSerieHistory` section was removed — `GetHistoryTrades`
+  is the only documented trade-history API.
+- **Python example:** the `requestHistory` command became `getHistoryTrades`
+  (the function already called `GetHistoryTrades`). The other examples did not
+  change.
 
 ### New APIs
 
@@ -264,6 +293,9 @@ signatures** — otherwise the stack is corrupted on the call.
 - Missing order callback updates: intermediate routing confirmations were
   treated as final (4.0.0.41). Expect **more** events per order; consumption
   must be idempotent.
+- Delayed delivery of order callbacks (4.0.0.42).
+- Exception when performing a new `SubscribeOfferBook` (4.0.0.42).
+- Process identifier (PID) sent by the DLL to the server (4.0.0.42).
 
 ## Troubleshooting
 
@@ -275,17 +307,104 @@ signatures** — otherwise the stack is corrupted on the call.
 | `NL_MARKET_ONLY` | Routing function called on a session started with `DLLInitializeMarketLogin` |
 | `NL_NO_LICENSE` / `NL_LICENSE_NOT_ALLOWED` | Missing activation key, or the feature is not enabled for it |
 | `NL_INVALID_TICKER` | Invalid ticker or exchange — check the one-character exchange code |
-| `NL_HISTORY_PERIOD_LIMIT` | History requested with a start date more than 30 days back |
+| `NL_HISTORY_PERIOD_LIMIT` | `GetHistoryTrades` with a start date older than 30 days |
+| `NL_INVALID_ARGS` from `GetHistoryTrades` | `WIN*`/`WDO*` ticker with a range of 10 days or more between `dtDateStart` and `dtDateEnd` — request day by day |
 | Empty strings in `*Out` structures | The second call of the *two-pass* pattern is missing |
 | Random crash in a callback (C#) | Delegate collected by the GC — missing static reference |
 | Callbacks stop arriving | Slow processing inside a callback is blocking the single queue |
 | DLL fails to load | Architecture mismatch (32 vs 64 bits) or DLL outside the working directory |
+
+## Extras — official resources and community
+
+This section gathers Nelogica's official channels about ProfitDLL and open
+community projects that use it. Nothing here replaces Nelogica's licence or
+support.
+
+### Official ProfitDLL download
+
+The latest official package — 32- and 64-bit DLL, Delphi test executable,
+interface files, the PDF manuals and the examples in four languages — is at:
+
+<https://download-setup.nelogica.com.br/connector/latest/ProfitDLL.zip>
+
+The same package is also offered in the Nelogica customer area (login →
+*Assinaturas* → *DLL Feed* licence → *Download*). The DLL only works with an
+activation key and an enabled account; prospective customers subscribe to Data
+Solution through the [NeloStore](https://store.nelogica.com.br/data-solution).
+
+### Official help (Nelogica)
+
+For general questions about Data Solution (DLL) or support requests, use
+Nelogica's own channels:
+
+- Help center: <https://ajuda.nelogica.com.br/>
+- *DataFeed - DLL* section of the help center, with the articles below
+  (in Portuguese):
+  <https://ajuda.nelogica.com.br/hc/pt-br/sections/11307712057883-DataFeed-DLL>
+
+| Article (pt-BR) | Topic |
+|---|---|
+| [Ecossistema ProfitDLL e primeiros passos](https://ajuda.nelogica.com.br/hc/pt-br/articles/22396517026203) | What the DLL is, initialisation modes (market data vs. routing), callbacks |
+| [Como obter acesso à ProfitDLL](https://ajuda.nelogica.com.br/hc/pt-br/articles/51583791325211) | Licensing and where to download `ProfitDLL.zip` with manual and examples |
+| [Introdução ao Produto DLL Real Time](https://ajuda.nelogica.com.br/hc/pt-br/articles/11166353435035) | Overview of the DLL Real Time product |
+| [Funções Real Time - DLL](https://ajuda.nelogica.com.br/hc/pt-br/articles/11168755650459) | Condensed function reference |
+| [Como rotear ordens com a ProfitDLL](https://ajuda.nelogica.com.br/hc/pt-br/articles/13312468554651) | Sending, changing and cancelling orders |
+| [Como requisitar trades históricos com a ProfitDLL](https://ajuda.nelogica.com.br/hc/pt-br/articles/11973319153563) | `GetHistoryTrades`, limits and history callbacks |
+| [Como utilizar o Livro de Profundidade (Price Depth) via DLL Real Time](https://ajuda.nelogica.com.br/hc/pt-br/articles/50587290263835) | `SubscribePriceDepth`, `GetPriceGroup` |
+| [ProfitDLL no Linux: Saiba como acessar e utilizar](https://ajuda.nelogica.com.br/hc/pt-br/articles/54973527417243) | Running the DLL on Linux |
+| [Problemas e dúvidas comuns - DLL Real Time](https://ajuda.nelogica.com.br/hc/pt-br/articles/11166562187803) | Official FAQ |
+| [Como saber se a DLL está conectada](https://ajuda.nelogica.com.br/hc/pt-br/articles/11168955426331) | Connection states (`TStateCallback`) |
+| [Logs de DLL não são gerados usando Python, e agora?](https://ajuda.nelogica.com.br/hc/pt-br/articles/11168640008859) | DLL logs from Python |
+| [Requisitando ajustes de ativos com a DLL Real Time](https://ajuda.nelogica.com.br/hc/pt-br/articles/13312278467099) | `SubscribeAdjustHistory` and adjustment callbacks |
+| [Do tick ao dashboard: construa sua análise de players com a ProfitDLL](https://ajuda.nelogica.com.br/hc/pt-br/articles/11966404695195) | Buy/sell agents derived from trades |
+| [Conheça os Principais Benefícios do Data Solution Nelogica](https://ajuda.nelogica.com.br/hc/pt-br/articles/11966232254619) | Commercial overview of Data Solution |
+| [Introdução ao produto Base Histórica de Dados](https://ajuda.nelogica.com.br/hc/pt-br/articles/11169074066715) | Sister product: historical database (not the DLL) |
+| [Tipos de Arquivos e Exemplos de Layout - Base Histórica de Dados](https://ajuda.nelogica.com.br/hc/pt-br/articles/11169423343515) | File layouts of the historical database |
+| [Disponibilidade de Dados Históricos para exportação em .CSV](https://ajuda.nelogica.com.br/hc/pt-br/articles/11169188636443) | CSV coverage of the historical database |
+
+### Nelogica blog — Data Solution category
+
+Every post Nelogica has published in the category
+<https://blog.nelogica.com.br/categoria/data-solution/> (surveyed on
+2026-09-10; the posts are in Portuguese):
+
+| Date | Post (pt-BR) | Summary | DLL relevance |
+|---|---|---|---|
+| 2026-08-25 | [Como usar a ProfitDLL no Linux?](https://blog.nelogica.com.br/profitdll-linux/) | Step-by-step tutorial for running ProfitDLL on Ubuntu by executing the Windows x64 Python inside Wine; ends with a WINFUT trade consumer and the precautions to take inside the callback | Direct (Python) |
+| 2026-08-24 | [Quant trading: tome decisões baseadas em dados](https://blog.nelogica.com.br/quant-trading/) | Conceptual guide to quantitative trading: quantitative analysis, quant funds and algorithms, strategies and an FAQ; points to Data Solution as the data source | Conceptual |
+| 2026-07-24 | [6 principais benefícios de Data Solution para traders](https://blog.nelogica.com.br/beneficios-data-solution/) | Product view: consolidated and adjusted data, a single scalable feed, low latency, 30+ years of B3 history, backtesting and automation | Product |
+| 2026-07-14 | [API de dados da B3: automatize suas operações com a DLL](https://blog.nelogica.com.br/api-de-dados-da-b3/) | What a B3 data API is and what it is for (algorithms, websites, machine learning), presenting Data Solution and its DLL connectivity | Product |
+| 2026-07-01 | [Como construir um replay de mercado com a Profit DLL?](https://blog.nelogica.com.br/como-construir-replay-mercado-profitdll/) | Architecture of a tick-by-tick market replay on top of ProfitDLL: swappable data source, history from file, virtual clock, instant or animated playback, Times & Trades and indicators | Direct |
+| 2026-07-01 | [Como aplicar as Bandas de Bollinger com ProfitDLL?](https://blog.nelogica.com.br/bandas-bollinger-profitdll/) | Reuses the tick → candle → indicator pipeline to compute Bollinger Bands (mean ± k standard deviations), with a rolling window and warm-up | Direct |
+| 2026-06-10 | [Como calcular médias móveis usando a ProfitDLL?](https://blog.nelogica.com.br/como-calcular-medias-moveis-usando-a-profitdll/) | The DLL delivers ticks, not candles: how to build the 1-minute OHLCV candle, combine 30 days of history with real time, and why the EMA seed diverges from the chart | Direct |
+| 2026-06-08 | [Como requisitar os trades históricos no ProfitDLL?](https://blog.nelogica.com.br/como-requisitar-trades-historicos-profitdll/) | Request limits and format, step-by-step flow, what each callback delivers and best practices: request day by day, use the progress callback, skip weekends and never call the DLL inside callbacks | Direct |
+| 2026-01-26 | [O que é o Data Solution e como usar dados de mercado da B3?](https://blog.nelogica.com.br/data-solution/) | Overview of Data Solution: use cases, advantages and the products that make it up (historical database + real-time DLL) | Product |
+| 2020-12-18 | [Por que os dados históricos da B3 são essenciais para qualquer trader?](https://blog.nelogica.com.br/dados-historicos-da-b3/) | B3 historical data, available coverage and five reasons to use it (backtesting, technical analysis, robots, research, portfolio management) | Data |
+
+### Community usage examples
+
+Open projects, independent from Nelogica, that show ProfitDLL in real use. The
+DLL itself still has to be obtained from Nelogica.
+
+| Repository | Author | What it offers |
+|---|---|---|
+| [YouTrade/DLLNelogica](https://github.com/YouTrade/DLLNelogica) | Marcelo Rahal Coutinho (YouTrade) | Educational C# / .NET 9 project, *Programando o seu robô de trading* series: from login to instrument subscription and quote reception via P/Invoke, with asynchronous file logging. MIT licence. |
+| [diogojrdev/profitdll-wrapper](https://github.com/diogojrdev/profitdll-wrapper) | Diogo Ribeiro | Python wrapper (ctypes, zero dependencies, Python 3.10+) with typing, enqueue-only callbacks, order routing, positions and tick-by-tick history ingestion into SQLite, PostgreSQL/TimescaleDB, Parquet and CSV; examples, tests and the `profitdll-wrapper` package on PyPI. MIT licence. |
+
+### Acknowledgements
+
+Thanks to **Marcelo Rahal Coutinho** (YouTrade) and **Diogo Ribeiro** for
+publishing these projects as open source — beyond the official examples, they
+are the best practical reference for how ProfitDLL behaves from C# and from
+Python.
 
 ## Licence and credits
 
 ProfitDLL, its manuals and the code examples are property of
 **[Nelogica](https://www.nelogica.com.br/)**. This repository only organises and
 converts that documentation into Markdown; it does not redistribute the library.
+The community projects cited above have their own licences and authors and are
+not affiliated with Nelogica.
 
-Official developer documentation:
-<https://desenvolvedores.nelogica.com.br/>
+Official ProfitDLL documentation (help center, *DataFeed - DLL* section):
+<https://ajuda.nelogica.com.br/hc/pt-br/sections/11307712057883-DataFeed-DLL>

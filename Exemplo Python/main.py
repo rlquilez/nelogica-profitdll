@@ -1001,21 +1001,21 @@ def getOrder():
 
     printOrder("GetOrder", order_id)
 
-def requestSerieHistory():
+def getHistoryTrades():
     asset = input('Asset: ')
     bolsa = input('Bolsa: ')
-    
+
     # Vamos testar com 5 MINUTOS
     fim = datetime.now()
-    inicio = fim - timedelta(minutes=5) 
-    
+    inicio = fim - timedelta(minutes=5)
+
     str_inicio = inicio.strftime("%d/%m/%Y %H:%M:%S")
     str_fim = fim.strftime("%d/%m/%Y %H:%M:%S")
 
-    print(f"Buscando histórico de {str_inicio} até {str_fim}...")
+    print(f"Buscando histórico de trades de {str_inicio} até {str_fim}...")
 
     result = profit_dll.GetHistoryTrades(c_wchar_p(asset), c_wchar_p(bolsa), c_wchar_p(str_inicio), c_wchar_p(str_fim))
-    
+
     evalDllReturn("GetHistoryTrades", result)
 
 def cancelOrder():
@@ -1326,8 +1326,8 @@ if __name__ == '__main__':
             GetAgentName()
         elif strInput == 'getPositionAssets':
             GetPositionAssets()
-        elif strInput == 'requestHistory':
-            requestSerieHistory()
+        elif strInput == 'getHistoryTrades':
+            getHistoryTrades()
         elif strInput == 'healthStatus':
             printHealthStatus()
 

@@ -1,9 +1,9 @@
 ---
 title: "ProfitDLL 64 bits - User Manual"
-dll_version: "4.0.0.41"
-manual_date: "2026-07-31"
+dll_version: "4.0.0.42"
+manual_date: "2026-09-04"
 language: "en-US"
-source: "Manual - ProfitDLL en_us.pdf (79 pages, Nelogica)"
+source: "Manual - ProfitDLL en_us.pdf (78 pages, Nelogica)"
 vendor: "Nelogica"
 generated_by: "structured conversion of the official PDF"
 ---
@@ -13,7 +13,7 @@ generated_by: "structured conversion of the official PDF"
 ## How to use this file in coding agents
 
 This file is the structured conversion of Nelogica's official ProfitDLL
-4.0.0.41 manual. It is prepared for consumption by development agents; the
+4.0.0.42 manual. It is prepared for consumption by development agents; the
 conventions below apply throughout the document.
 
 - **The Delphi signatures are the canonical reference.** Every function,
@@ -47,11 +47,32 @@ other one.
 Copy the incoming data out and process it on another thread. Avoid disk I/O and
 database access inside callbacks.
 
-## Delta 4.0.0.31 → 4.0.0.41
+## Delta 4.0.0.31 → 4.0.0.42
 
 > Summary of the changes between the version previously published in this
-> repository (4.0.0.31) and the current one (4.0.0.41), cross-checked between
+> repository (4.0.0.31) and the current one (4.0.0.42), cross-checked between
 > the official manual and the code examples shipped with the DLL.
+
+### What changes in 4.0.0.42
+
+4.0.0.42 is a bug-fix release: no function, callback, structure or constant
+was added to or removed from the DLL. What changed relative to 4.0.0.41:
+
+- **Three DLL fixes** — delayed delivery of order callbacks, an exception when
+  performing a new `SubscribeOfferBook`, and the process identifier (PID) sent
+  to the server (see *Relevant DLL fixes*).
+- **`GetHistoryTrades` now documents its limits:** a start date
+  (`dtDateStart`) older than 30 days returns `NL_HISTORY_PERIOD_LIMIT`; for
+  tickers starting with `WIN` or `WDO`, a range between `dtDateStart` and
+  `dtDateEnd` that reaches 10 days returns `NL_INVALID_ARGS`. Request the
+  history of those contracts day by day.
+- **`RequestSerieHistory` was removed from the manual.** 4.0.0.41 documented
+  it (with a table of allowed 1-Trade day ranges per asset), but none of the
+  four official examples bound it. `GetHistoryTrades` is the only documented
+  trade-history API.
+- **Python example:** the menu command `requestHistory` was renamed to
+  `getHistoryTrades` (the function `requestSerieHistory()` became
+  `getHistoryTrades()`; it already called `GetHistoryTrades`).
 
 ### New functions and types
 
@@ -90,6 +111,9 @@ otherwise the stack is corrupted on the call.
 | Missing order callback updates: intermediate routing confirmations were treated as final | 4.0.0.41 |
 | Error subscribing to the price book (`SubscribePriceDepth`) of an invalid instrument | 4.0.0.41 |
 | Inability to connect to Market Data on certain hosts | 4.0.0.41 |
+| Delayed delivery of order callbacks | 4.0.0.42 |
+| Exception when performing a new `SubscribeOfferBook` | 4.0.0.42 |
+| Process identifier (PID) sent by the DLL to the server | 4.0.0.42 |
 
 In addition, from 4.0.0.41 the 64-bit DLL periodically writes **performance
 logs** (*sampling profiler*) to file.
@@ -104,12 +128,12 @@ Consolidated index of every API the manual itself marks as obsolete or deprecate
 | `UnsubscribePriceBook` | `UnsubscribePriceDepth` |
 | `GetAgentNameByID` | `GetAgentName` with `GetAgentNameLength` |
 | `GetAgentShortNameByID` | `GetAgentName` with `GetAgentNameLength` |
-| `SetHistoryCallbackV2` | `SerOrderHistoryCallback` |
+| `SetHistoryCallbackV2` | `SetOrderHistoryCallback` |
 | `SetOrderChangeCallbackV2` | `SetOrderCallback` |
 | `SetPriceBookCallbackV2` | `SetPriceDepthCallback` |
 | `SetTradeCallback` | `SetTradeCallbackV2` |
 | `SetPriceBookCallback` | `SetPriceDepthCallback` |
-| `SetHistoryCallback` | `SerOrderHistoryCallback` |
+| `SetHistoryCallback` | `SetOrderHistoryCallback` |
 | `SetOrderChangeCallback` | `SetOrderCallback` |
 | `SendBuyOrder` | `SendOrder` |
 | `SendSellOrder` | `SendOrder` |
@@ -132,9 +156,13 @@ Consolidated index of every API the manual itself marks as obsolete or deprecate
 
 ## Quick API index
 
+In the same order as the manual. (`SetEnabledHistOrder` sits in different
+positions in the pt-BR and en-US PDFs: after `GetPosition` and after
+`GetTheoreticalValues`, respectively.)
+
 ### Exposed functions (§3.1)
 
-`DLLInitializeLogin`, `DLLInitializeMarketLogin`, `DLLFinalize`, `SetServerAndPort`, `GetServerClock`, `GetHealthStatus`, `GetLastDailyClose`, `SubscribeTicker`, `UnsubscribeTicker`, `SubscribeOfferBook`, `UnsubscribeOfferBook`, `SubscribePriceBook`, `UnsubscribePriceBook`, `SubscribeAdjustHistory`, `UnsubscribeAdjustHistory`, `GetAgentNameByID`, `GetAgentShortNameByID`, `GetAgentNameLength`, `GetAgentName`, `GetHistoryTrades`, `SetDayTrade`, `SetEnabledLogToDebug`, `RequestTickerInfo`, `SetChangeCotationCallback`, `SetAssetListCallback`, `SetAssetListInfoCallback`, `SetAssetListInfoCallbackV2`, `SetInvalidTickerCallback`, `SetChangeStateTickerCallback`, `SetAdjustHistoryCallback`, `SetAdjustHistoryCallbackV2`, `SetTheoreticalPriceCallback`, `SetHistoryCallbackV2`, `SetOrderChangeCallbackV2`, `SetOfferBookCallbackV2`, `SetPriceBookCallbackV2`, `SetStateCallback`, `SetHealthCallback`, `SetTradeCallback`, `SetHistoryTradeCallback`, `SetDailyCallback`, `SetSerieProgressCallback`, `SetOfferBookCallback`, `SetPriceBookCallback`, `SetAssetPositionListCallback`, `SetAccountCallback`, `SetHistoryCallback`, `SetOrderChangeCallback`, `SetOrderCallback`, `SetOrderHistoryCallback`, `SetTradeCallbackV2`, `SetHistoryTradeCallbackV2`, `SetPriceDepthCallback`, `SetTradingMessageResultCallback`, `GetAccount`, `SendBuyOrder`, `SendSellOrder`, `SendMarketBuyOrder`, `SendMarketSellOrder`, `SendStopBuyOrder`, `SendStopSellOrder`, `SendChangeOrder`, `SendCancelOrder`, `SendCancelOrders`, `SendCancelAllOrders`, `SendZeroPosition`, `SendZeroPositionAtMarket`, `GetOrders`, `GetOrder`, `GetOrderProfitID`, `GetPosition`, `SendOrder`, `SendChangeOrderV2`, `SendCancelOrderV2`, `SendCancelOrdersV2`, `SendCancelAllOrdersV2`, `SendZeroPositionV2`, `GetAccountCount`, `GetAccounts`, `GetAccountDetails`, `GetAccountCountByBroker`, `GetAccountsByBroker`, `GetSubAccountCount`, `GetSubAccounts`, `GetPositionV2`, `GetOrderDetails`, `HasOrdersInInterval`, `EnumerateOrdersByInterval`, `EnumerateAllOrders`, `EnumerateAllPositionAssets`, `TranslateTrade`, `SubscribePriceDepth`, `UnsubscribePriceDepth`, `GetPriceDepthSideCount`, `GetPriceGroup`, `GetTheoreticalValues`, `RequestSerieHistory`, `SetEnabledHistOrder`
+`DLLInitializeLogin`, `DLLInitializeMarketLogin`, `DLLFinalize`, `SetServerAndPort`, `GetServerClock`, `GetHealthStatus`, `GetLastDailyClose`, `SubscribeTicker`, `UnsubscribeTicker`, `SubscribeOfferBook`, `UnsubscribeOfferBook`, `SubscribePriceBook`, `UnsubscribePriceBook`, `SubscribeAdjustHistory`, `UnsubscribeAdjustHistory`, `GetAgentNameByID`, `GetAgentShortNameByID`, `GetAgentNameLength`, `GetAgentName`, `GetHistoryTrades`, `SetDayTrade`, `SetEnabledLogToDebug`, `RequestTickerInfo`, `SetChangeCotationCallback`, `SetAssetListCallback`, `SetAssetListInfoCallback`, `SetAssetListInfoCallbackV2`, `SetInvalidTickerCallback`, `SetChangeStateTickerCallback`, `SetAdjustHistoryCallback`, `SetAdjustHistoryCallbackV2`, `SetTheoreticalPriceCallback`, `SetHistoryCallbackV2`, `SetOrderChangeCallbackV2`, `SetOfferBookCallbackV2`, `SetPriceBookCallbackV2`, `SetStateCallback`, `SetHealthCallback`, `SetTradeCallback`, `SetHistoryTradeCallback`, `SetDailyCallback`, `SetSerieProgressCallback`, `SetOfferBookCallback`, `SetPriceBookCallback`, `SetAssetPositionListCallback`, `SetAccountCallback`, `SetHistoryCallback`, `SetOrderChangeCallback`, `SetOrderCallback`, `SetOrderHistoryCallback`, `SetTradeCallbackV2`, `SetHistoryTradeCallbackV2`, `SetPriceDepthCallback`, `SetTradingMessageResultCallback`, `GetAccount`, `SendBuyOrder`, `SendSellOrder`, `SendMarketBuyOrder`, `SendMarketSellOrder`, `SendStopBuyOrder`, `SendStopSellOrder`, `SendChangeOrder`, `SendCancelOrder`, `SendCancelOrders`, `SendCancelAllOrders`, `SendZeroPosition`, `SendZeroPositionAtMarket`, `GetOrders`, `GetOrder`, `GetOrderProfitID`, `GetPosition`, `SendOrder`, `SendChangeOrderV2`, `SendCancelOrderV2`, `SendCancelOrdersV2`, `SendCancelAllOrdersV2`, `SendZeroPositionV2`, `GetAccountCount`, `GetAccounts`, `GetAccountDetails`, `GetAccountCountByBroker`, `GetAccountsByBroker`, `GetSubAccountCount`, `GetSubAccounts`, `GetPositionV2`, `GetOrderDetails`, `HasOrdersInInterval`, `EnumerateOrdersByInterval`, `EnumerateAllOrders`, `EnumerateAllPositionAssets`, `TranslateTrade`, `SubscribePriceDepth`, `UnsubscribePriceDepth`, `GetPriceDepthSideCount`, `GetPriceGroup`, `GetTheoreticalValues`, `SetEnabledHistOrder`
 
 ### Callbacks (§3.2)
 
@@ -173,30 +201,47 @@ Conversion reference cited by the manual:
 
 - The content below preserves the order, headings and wording of the official
   PDF, including the version history, which Nelogica publishes at the start of
-  the document.
-- **Manual vs. code divergence:** the error-code table in the 4.0.0.41 manual
+  the document. Paragraphs, lists, tables, quotes and bold text follow the
+  structure tagged in the PDF itself.
+- **Code blocks:** long lines that the PDF print wrapped were re-joined into a
+  single line, and blank lines between declarations were reconstructed from
+  the PDF's vertical spacing. Line breaks present in the vendor's own text
+  (e.g. `SubscribePriceDepth` declared over two lines) were kept.
+- **Manual vs. code divergence:** the error-code table in the 4.0.0.42 manual
   does not list `NL_PASSWORD_HASH_SHA1` (`0x80000007`) or
   `NL_PASSWORD_HASH_MD5` (`0x80000008`), although both exist in the Delphi
   header shipped with the DLL (`ProfitConstantsU.pas`). Treat both codes as
   valid.
-- Three layout defects in the official English PDF were repaired in this
-  conversion: the `3. Library Interface` and
-  ``Note on `MARKET_PARTIAL_CONNECTED` `` headings had lost their heading level
-  and merged into the following paragraph, and the changelog's `Bug Fixes`
-  labels were emitted one level below their Portuguese counterparts.
+- **Layout defects of the official English PDF repaired here:** the heading
+  `3. Library Interface` is printed as a numbered-list item merged with the
+  following paragraph (restored as a `##` heading); the bold paragraph
+  ``Note on `MARKET_PARTIAL_CONNECTED` `` is merged into the paragraph that
+  follows it (restored as its own paragraph, as in the Portuguese PDF); and the
+  changelog's `Bug Fixes` labels under 4.0.0.28 and 4.0.0.24 sit one level
+  below their Portuguese counterparts (normalised to `###`).
 - **Manual vs. Delphi wrapper divergence:** five functions are declared in
   `Exemplo Delphi/Wrapper/` but appear in no section of the manual —
   `InitializeCustom`, `ConnectorSetServerAndPort`,
   `ConnectorSetServerAndPortRoteamento`, `GetSerieHistory` and
   `GetLocationInfo`. Treat them as not officially supported.
-- `RequestSerieHistory` is documented in the manual, but none of the four
-  official examples binds it.
+- **`RequestSerieHistory`:** documented up to 4.0.0.41 (bound by none of the
+  official examples), it was removed from the manual in 4.0.0.42. Use
+  `GetHistoryTrades` for trade history; `GetSerieHistory` exists only in the
+  legacy Delphi wrapper.
 - Vendor spelling, abbreviations and occasional typos were preserved for
   fidelity to the original — including the Portuguese connector `" e "` in the
   heading `GetAgentNameByID e GetAgentShortNameByID`, which appears that way in
   the English PDF too.
 
 ---
+
+## 4.0.0.42
+
+### Bug Fixes
+
+- Fixed delayed delivery of order callbacks;
+- Fixed exception when performing a new `SubscribeOfferBook`;
+- Fixed the process identifier (PID) sent by the DLL to the server;
 
 ## 4.0.0.41
 
@@ -218,7 +263,7 @@ Enabled performance logging (*sampling profiler*) in the 64-bit DLL. The monitor
 
 ### Market data feed monitoring
 
-Added a *watchdog* that detects when the server feed is OK but local delivery of market data callbacks has stalled. Two new market data states are now returned in `TStateCallback` / `TNewStateCallback` (`nConnStateType =` `2`): `MARKET_PERFORMANCE_WARNING` (5) and `MARKET_PARTIAL_CONNECTED` (6)
+Added a *watchdog* that detects when the server feed is OK but local delivery of market data callbacks has stalled. Two new market data states are now returned in `TStateCallback` / `TNewStateCallback` (`nConnStateType = 2`): `MARKET_PERFORMANCE_WARNING` (5) and `MARKET_PARTIAL_CONNECTED` (6)
 
 ### Bug Fixes
 
@@ -231,7 +276,8 @@ Added a *watchdog* that detects when the server feed is OK but local delivery of
 
 The `nMinOrderQtd`, `nMaxOrderQtd`, and `nLote` fields changed from `Integer` to `Int64` (overflow fix) in the callbacks:
 
-- `TAssetListInfoCallback` `TAssetListInfoCallbackV2`
+- `TAssetListInfoCallback`
+- `TAssetListInfoCallbackV2`
 
 ### Bug Fixes
 
@@ -285,7 +331,11 @@ To better manage theoretical prices during auction, a new mechanism was created 
 
 #### New Types
 
-- `TConnectorPriceGroup` `TConnectorActionType` `TConnectorUpdateType` `TConnectorBookSideType` `TConnectorPriceDepthCallback`
+- `TConnectorPriceGroup`
+- `TConnectorActionType`
+- `TConnectorUpdateType`
+- `TConnectorBookSideType`
+- `TConnectorPriceDepthCallback`
 
 #### New Callbacks
 
@@ -293,7 +343,10 @@ To better manage theoretical prices during auction, a new mechanism was created 
 
 #### New Functions
 
-- `SubscribePriceDepth` `UnsubscribePriceDepth` `GetPriceDepthSideCount` `GetPriceGroup`
+- `SubscribePriceDepth`
+- `UnsubscribePriceDepth`
+- `GetPriceDepthSideCount`
+- `GetPriceGroup`
 
 ### Bug Fixes
 
@@ -316,7 +369,9 @@ Added a mechanism to iterate over the instruments that make up an account's posi
 
 Added the EventID field to the following structures:
 
-- `TConnectorTradingAccountPosition` `TConnectorOrder` `TConnectorOrderOut`
+- `TConnectorTradingAccountPosition`
+- `TConnectorOrder`
+- `TConnectorOrderOut`
 
 #### New Types
 
@@ -336,15 +391,18 @@ Added new mechanisms for retrieving routing accounts and sub-accounts.
 
 #### New Types
 
-- `TConnectorBrokerAccountListCallback` `TConnectorBrokerSubAccountListCallback`
+- `TConnectorBrokerAccountListCallback`
+- `TConnectorBrokerSubAccountListCallback`
 
 #### New Callbacks
 
-- `SetBrokerAccountListChangedCallback` `SetBrokerSubAccountListChangedCallback`
+- `SetBrokerAccountListChangedCallback`
+- `SetBrokerSubAccountListChangedCallback`
 
 #### New Functions
 
-- `GetAccountCountByBroker` `GetAccountsByBroker`
+- `GetAccountCountByBroker`
+- `GetAccountsByBroker`
 
 ### Bug Fixes
 
@@ -358,7 +416,8 @@ New functions to retrieve agent names.
 
 #### New Functions
 
-- `GetAgentNameLength` `GetAgentName`
+- `GetAgentNameLength`
+- `GetAgentName`
 
 ### Bug Fixes
 
@@ -379,11 +438,13 @@ Added new mechanisms for retrieving trades.
 
 #### New Types
 
-- `TConnectorTradeCallback` `TConnectorTrade`
+- `TConnectorTradeCallback`
+- `TConnectorTrade`
 
 #### New Callbacks
 
-- `SetTradeCallbackV2` `SetHistoryTradeCallbackV2`
+- `SetTradeCallbackV2`
+- `SetHistoryTradeCallbackV2`
 
 #### New Functions
 
@@ -395,7 +456,8 @@ To better support downloading order history, an improved mechanism was created f
 
 #### New Types
 
-- `TConnectorOrder` `TConnectorEnumerateOrdersProc`
+- `TConnectorOrder`
+- `TConnectorEnumerateOrdersProc`
 
 #### New Callbacks
 
@@ -403,7 +465,9 @@ To better support downloading order history, an improved mechanism was created f
 
 #### New Functions
 
-- `HasOrdersInInterval` `EnumerateOrdersByInterval` `EnumerateAllOrders`
+- `HasOrdersInInterval`
+- `EnumerateOrdersByInterval`
+- `EnumerateAllOrders`
 
 ### Bug Fixes
 
@@ -411,38 +475,51 @@ To better support downloading order history, an improved mechanism was created f
 
 ## 1. Product Description
 
-The files contained in the zip archive are organized into separate directories for the 64 bit and 32 bit versions. Each directory has the same file structure. In the directory named DLL and Executable, you can find the ProfitDLL.dll file for the 32 bit version and ProfitDLL64.dll for the 64 bit version. Additionally, there is a compiled example in Delphi that can be used to validate the software's functionalities. In the directory named Interface, files containing the declarations of the functions and types necessary to communicate with the DLL in Delphi are provided. There are also examples for 4 different programming languages in the Example folders
+The files contained in the zip archive are organized into separate directories for the 64 bit and 32 bit versions. Each directory has the same file structure. In the directory named DLL and Executable, you can find the ProfitDLL.dll file for the 32 bit version and ProfitDLL64.dll for the 64 bit version. Additionally, there is a compiled example in Delphi that can be used to validate the software's functionalities. In the directory named Interface, files containing the declarations of the functions and types necessary to communicate with the DLL in Delphi are provided.
 
-- Delphi C# C++ Python
+There are also examples for 4 different programming languages in the Example folders
+
+- Delphi
+- C#
+- C++
+- Python
 
 They contain the source code to use the main functionalities of the product.
 
 ## 2. Library Description
 
-The library provides basic communication functions with the Routing and Market Data servers for developing 32 bit or 64 bit applications. The DLL responds to server events and sends them, processed in real time, to the client application, primarily through callbacks that will be described in section `3.2`. The following sections describe, in more detail, how the communication between the library and the client application is carried out, as well as present the technical details of each function or callback.
+The library provides basic communication functions with the Routing and Market Data servers for developing 32 bit or 64 bit applications. The DLL responds to server events and sends them, processed in real time, to the client application, primarily through callbacks that will be described in section `3.2`.
+
+The following sections describe, in more detail, how the communication between the library and the client application is carried out, as well as present the technical details of each function or callback.
 
 ## 3. Library Interface
 
 The library exposes several functions that are directly called by the client application, which make requests to the servers or directly to the internal services and structures of the DLL. The types specified in this documentation are coded in Delphi, with specific examples for other programming languages in their respective example files.
 
-All the structures necessary to define the library's functions are defined below: Definitions:
+All the structures necessary to define the library's functions are defined below:
+
+Definitions:
 
 ```delphi
 // Pointer Math
 PConnectorAccountIdentifierArrayOut = ^TConnectorAccountIdentifierOut;
+
 TConnectorOrderType = (
     cotMarket    = 1,
     cotLimit     = 2,
     cotStopLimit = 4
 );
+
 TConnectorOrderSide = (
     cosBuy  = 1,
     cosSell = 2
 );
+
 TConnectorPositionType = (
     cptDayTrade     = 1,
     cptConsolidated = 2
 );
+
 TConnectorOrderStatus = (
     cosNew                     = 0,
     cosPartiallyFilled         = 1,
@@ -472,6 +549,7 @@ TConnectorOrderStatus = (
     cosDelayFixGateway         = 206,
     cosScheduledOrder          = 207
 );
+
 TConnectorActionType = (
     atAdd        = 0,
     atEdit       = 1,
@@ -479,6 +557,7 @@ TConnectorActionType = (
     atDeleteFrom = 3,
     atFullBook   = 4
 );
+
 TConnectorUpdateType = (
     utAdd          = 0,
     utEdit         = 1,
@@ -490,12 +569,14 @@ TConnectorUpdateType = (
     utTheoricPrice = 7,
     utDeleteFrom   = 8
 );
+
 TConnectorBookSideType = (
     bsBuy  = 0,
     bsSell = 1,
     bsBoth = 254,
     bsNone = 255
 );
+
 TConnectorTradingMessageResultCode = (
     mrcStarting                       = 0,
     mrcNotConnected                   = 1,
@@ -535,8 +616,10 @@ TConnectorTradingMessageResultCode = (
     mrcSubAccountAssetsUpdateError    = 80,
     mrcUnknown                        = 200
 );
+
 TConnectorAccountIdentifier = record
     Version : Byte;
+
     // V0
     BrokerID     : Integer;
     AccountID    : PWideChar;
@@ -544,8 +627,10 @@ TConnectorAccountIdentifier = record
     Reserved     : Int64;
 end;
 PConnectorAccountIdentifier = ^TConnectorAccountIdentifier;
+
 TConnectorAccountIdentifierOut = record
     Version : Byte;
+
     // V0
     BrokerID           : Integer;
     AccountID          : TString0In;
@@ -555,15 +640,19 @@ TConnectorAccountIdentifierOut = record
     Reserved           : Int64;
 end;
 PConnectorAccountIdentifierOut = ^TConnectorAccountIdentifierOut;
+
 TConnectorAssetIdentifier = record
     Version : Byte;
+
     // V0
     Ticker   : PWideChar;
     Exchange : PWideChar;
     FeedType : Byte;
 end;
+
 TConnectorAssetIdentifierOut = record
     Version : Byte;
+
     // V0
     Ticker         : PWideChar;
     TickerLength   : Integer;
@@ -571,78 +660,100 @@ TConnectorAssetIdentifierOut = record
     ExchangeLength : Integer;
     FeedType : Byte;
 end;
+
 TConnectorOrderIdentifier = record
     Version : Byte;
+
     // V0
     LocalOrderID : Int64;
     ClOrderID    : PWideChar;
 end;
+
 TConnectorSendOrder = record
     Version : Byte;
+
     // V0
     AccountID : TConnectorAccountIdentifier;
     AssetID   : TConnectorAssetIdentifier;
     Password  : PWideChar;
     OrderType : Byte; // TConnectorOrderType
     OrderSide : Byte; // TConnectorOrderSide
+
     Price     : Double;
     StopPrice : Double;
     Quantity  : Int64;
+
     // V2
     MessageID : Int64;
 end;
 PConnectorSendOrder = ^TConnectorSendOrder;
+
 TConnectorChangeOrder = record
     Version : Byte;
+
     // V0
     AccountID : TConnectorAccountIdentifier;
     OrderID   : TConnectorOrderIdentifier;
     Password  : PWideChar;
+
     Price     : Double;
     StopPrice : Double;
     Quantity  : Int64;
+
     // V1
     MessageID : Int64;
 end;
 PConnectorChangeOrder = ^TConnectorChangeOrder;
+
 TConnectorCancelOrder = record
     Version : Byte;
+
     // V0
     AccountID : TConnectorAccountIdentifier;
     OrderID   : TConnectorOrderIdentifier;
     Password  : PWideChar;
+
     // V1
     MessageID : Int64;
 end;
 PConnectorCancelOrder = ^TConnectorCancelOrder;
+
 TConnectorCancelOrders = record
     Version : Byte;
+
     // V0
     AccountID : TConnectorAccountIdentifier;
     AssetID   : TConnectorAssetIdentifier;
     Password  : PWideChar;
 end;
 PConnectorCancelOrders = ^TConnectorCancelOrders;
+
 TConnectorCancelAllOrders = record
     Version : Byte;
+
     // V0
     AccountID : TConnectorAccountIdentifier;
     Password  : PWideChar;
 end;
 PConnectorCancelAllOrders = ^TConnectorCancelAllOrders;
+
 TConnectorZeroPosition = record
     Version : Byte;
+
     // V0
     AccountID : TConnectorAccountIdentifier;
     AssetID   : TConnectorAssetIdentifier;
     Password  : PWideChar;
     Price     : Double;
+
     // V1
     PositionType : Byte;
+
     // V2
     MessageID : Int64;
 end;
 PConnectorZeroPosition = ^TConnectorZeroPosition;
+
 TConnectorAccountType = (
   cutOwner       = 0,
   cutAssessor    = 1,
@@ -652,35 +763,47 @@ TConnectorAccountType = (
   cutPropOffice  = 5,
   cutPropManager = 6
 );
+
 TConnectorTradingAccountOut = record
     Version : Byte;
+
     // In Fields
     AccountID : TConnectorAccountIdentifier;
+
     // Out fields
     BrokerName         : PWideChar;
     BrokerNameLength   : Integer;
+
     OwnerName          : PWideChar;
     OwnerNameLength    : Integer;
+
     SubOwnerName       : PWideChar;
     SubOwnerNameLength : Integer;
+
     AccountFlags       : TFlags;
+
     // V1
     AccountType        : Byte; // TConnectorAccountType
 end;
 PConnectorTradingAccountOut = ^TConnectorTradingAccountOut;
+
 TConnectorTradingAccountPosition = record
     Version : Byte;
+
     // In Fields
     AccountID : TConnectorAccountIdentifier;
     AssetID   : TConnectorAssetIdentifier;
+
     // Out Fields
     OpenQuantity           : Int64;
     OpenAveragePrice       : Double;
     OpenSide               : Byte;
+
     DailyAverageSellPrice  : Double;
     DailySellQuantity      : Int64;
     DailyAverageBuyPrice   : Double;
     DailyBuyQuantity       : Int64;
+
     DailyQuantityD1        : Int64;
     DailyQuantityD2        : Int64;
     DailyQuantityD3        : Int64;
@@ -690,63 +813,83 @@ TConnectorTradingAccountPosition = record
     DailyQuantityProvision : Int64;
     DailyQuantity          : Int64;
     DailyQuantityAvailable : Int64;
+
     // V1
     PositionType : Byte;
+
     // V2
     EventID : Int64;
 end;
 PConnectorTradingAccountPosition = ^TConnectorTradingAccountPosition;
+
 TConnectorOrder = record
     Version : Byte;
+
     OrderID           : TConnectorOrderIdentifier;
     AccountID         : TConnectorAccountIdentifier;
     AssetID           : TConnectorAssetIdentifier;
+
     Quantity          : Int64;
     TradedQuantity    : Int64;
     LeavesQuantity    : Int64;
+
     Price             : Double;
     StopPrice         : Double;
     AveragePrice      : Double;
+
     OrderSide         : Byte; // TConnectorOrderSide
     OrderType         : Byte; // TConnectorOrderType
     OrderStatus       : Byte;
     ValidityType      : Byte;
+
     Date              : TSystemTime;
     LastUpdate        : TSystemTime;
     CloseDate         : TSystemTime;
     ValidityDate      : TSystemTime;
+
     TextMessage       : PWideChar;
+
     // V1
     EventID : Int64;
 end;
 PConnectorOrder = ^TConnectorOrder;
+
 TConnectorOrderOut = record
     Version : Byte;
+
     // In Fields
     OrderID           : TConnectorOrderIdentifier;
+
     // Out Fields
     AccountID         : TConnectorAccountIdentifierOut;
     AssetID           : TConnectorAssetIdentifierOut;
+
     Quantity          : Int64;
     TradedQuantity    : Int64;
     LeavesQuantity    : Int64;
+
     Price             : Double;
     StopPrice         : Double;
     AveragePrice      : Double;
+
     OrderSide         : Byte; // TConnectorOrderSide
     OrderType         : Byte; // TConnectorOrderType
     OrderStatus       : Byte;
     ValidityType      : Byte;
+
     Date              : TSystemTime;
     LastUpdate        : TSystemTime;
     CloseDate         : TSystemTime;
     ValidityDate      : TSystemTime;
+
     TextMessage       : PWideChar;
     TextMessageLength : Integer;
+
     // V1
     EventID : Int64;
 end;
 PConnectorOrderOut = ^TConnectorOrderOut;
+
 TConnectorTrade = record
     Version     : Byte;
     TradeDate   : TSystemTime;
@@ -759,8 +902,10 @@ TConnectorTrade = record
     TradeType   : Byte; //TTradeType
 end;
 PConnectorTrade = ^TConnectorTrade;
+
 TConnectorTradingMessageResult = record
     Version : Byte;
+
     // V0
     BrokerID      : Integer;
     OrderID       : TConnectorOrderIdentifier;
@@ -769,13 +914,14 @@ TConnectorTradingMessageResult = record
     Message       : PWideChar;
     MessageLength : Integer;
 end;
+
 TAssetIDRec = packed record
     pwcTicker : PWideChar;  // Represents the asset name e.g.: "WDOFUT".
-    pwcBolsa  : PWideChar;  // Represents the exchange the asset belongs to e.g. (for
-Bovespa): "B".
+    pwcBolsa  : PWideChar;  // Represents the exchange the asset belongs to e.g. (for Bovespa): "B".
     nFeed     : Integer;    // Data source 0 (Nelogica), 255 (Other).
 end;
 PAssetIDRec = ^TAssetIDRec;
+
 TAccountRec = packed record
     pwhAccountID     : PWideChar;  // Account Identifier
     pwhTitular       : PWideChar;  // Account Holder Name
@@ -783,18 +929,23 @@ TAccountRec = packed record
     nCorretoraID     : Integer;    // Broker Identifier
 end;
 PAccountRec = ^TAccountRec;
+
 // Delegates
 TConnectorEnumerateOrdersProc = function(
     const a_Order : PConnectorOrder;
     const a_Param : LPARAM
 ) : BOOL; stdcall;
+
 // TConnectorTradingAccountOut.Flags
 CA_IS_SUB_ACCOUNT : Cardinal = 1;
 CA_IS_ENABLED     : Cardinal = 2;
+
 // TConnectorMarketDataLibrary.Flags
 CM_IS_SHORT_NAME  : Cardinal = 1;
+
 // TConnectorPriceGroup.PriceGroupFlags
 PG_IS_THEORIC     : Cardinal = 1;
+
 // Exchanges
 gc_bvBCB            = 65; // A
 gc_bvBovespa        = 66; // B
@@ -808,44 +959,51 @@ gc_bvOXR            = 79; // O
 gc_bvPioneer        = 80; // P
 gc_bvDowJones       = 88; // X
 gc_bvNyse           = 89; // Y
+
 // Status
 CONNECTION_STATE_LOGIN        = 0;  // Connection to login server
 CONNECTION_STATE_ROTEAMENTO   = 1;  // Connection to routing server
 CONNECTION_STATE_MARKET_DATA  = 2;  // Connection to market data server
 CONNECTION_STATE_MARKET_LOGIN = 3;  // Login to market data server
+
 LOGIN_CONNECTED    = 0;   // Login server connected
 LOGIN_INVALID      = 1;   // Login is invalid
 LOGIN_INVALID_PASS = 2;   // Invalid password
 LOGIN_BLOCKED_PASS = 3;   // Password locked
 LOGIN_EXPIRED_PASS = 4;   // Password expired
 LOGIN_UNKNOWN_ERR  = 200; // Internal login error
+
 ROTEAMENTO_DISCONNECTED        = 0;
 ROTEAMENTO_CONNECTING          = 1;
 ROTEAMENTO_CONNECTED           = 2;
 ROTEAMENTO_BROKER_DISCONNECTED = 3;
 ROTEAMENTO_BROKER_CONNECTING   = 4;
 ROTEAMENTO_BROKER_CONNECTED    = 5;
+
 MARKET_DISCONNECTED         = 0;  // Disconnected from market data server
 MARKET_CONNECTING           = 1;  // Connecting to market data server
 MARKET_WAITING              = 2;  // Waiting for connection
 MARKET_NOT_LOGGED           = 3;  // Not logged in to market data server
 MARKET_CONNECTED            = 4;  // Connected to market data
-MARKET_PERFORMANCE_WARNING  = 5;  // Connected, but the server reported performance
-degradation
-MARKET_PARTIAL_CONNECTED    = 6;  // Connected, but local delivery of market data
-callbacks has stalled
+MARKET_PERFORMANCE_WARNING  = 5;  // Connected, but the server reported performance degradation
+MARKET_PARTIAL_CONNECTED    = 6;  // Connected, but local delivery of market data callbacks has stalled
+
 CONNECTION_ACTIVATE_VALID   = 0;  // Valid activation
 CONNECTION_ACTIVATE_INVALID = 1;  // Invalid activation
+
 // Old Versions
+
 TConnectorOrderTypeV0 = (
     cotLimit  = 0,
     cotStop   = 1,
     cotMarket = 2
 );
+
 TConnectorOrderSideV0 = (
     cosBuy  = 0,
     cosSell = 1
 );
+
 // TConnectorTradeCallback.Flags
 TC_IS_EDIT     : Cardinal = 1;
 TC_LAST_PACKET : Cardinal = 2;
@@ -907,6 +1065,7 @@ function DLLInitializeLogin(
     HistoryTradeCallback   : THistoryTradeCallback;
     ProgressCallback       : TProgressCallback;
     TinyBookCallback       : TTinyBookCallback) : Integer; stdcall;
+
 function DLLInitializeMarketLogin(
     const pwcActivationKey : PWideChar;
     const pwcUser          : PWideChar;
@@ -919,29 +1078,35 @@ function DLLInitializeMarketLogin(
     HistoryTradeCallback   : THistoryTradeCallback;
     ProgressCallback       : TProgressCallback;
     TinyBookCallback       : TTinyBookCallback) : Integer; stdcall;
+
 function DLLFinalize: Integer; stdcall;
-function SubscribeTicker(pwcTicker : PWideChar; pwcBolsa : PWideChar) : Integer;
-stdcall;
-function UnsubscribeTicker(pwcTicker : PWideChar; pwcBolsa : PWideChar) : Integer;
-stdcall;
-function SubscribePriceBook(pwcTicker : PWideChar; pwcBolsa : PWideChar) : Integer;
-stdcall;
-function UnsubscribePriceBook(pwcTicker : PWideChar; pwcBolsa : PWideChar) : Integer;
-stdcall;
-function SubscribeOfferBook(pwcTicker : PWideChar; pwcBolsa : PWideChar) : Integer;
-stdcall;
-function UnsubscribeOfferBook(pwcTicker : PWideChar; pwcBolsa : PWideChar) : Integer;
-stdcall;
+
+function SubscribeTicker(pwcTicker : PWideChar; pwcBolsa : PWideChar) : Integer; stdcall;
+
+function UnsubscribeTicker(pwcTicker : PWideChar; pwcBolsa : PWideChar) : Integer; stdcall;
+
+function SubscribePriceBook(pwcTicker : PWideChar; pwcBolsa : PWideChar) : Integer; stdcall;
+
+function UnsubscribePriceBook(pwcTicker : PWideChar; pwcBolsa : PWideChar) : Integer; stdcall;
+
+function SubscribeOfferBook(pwcTicker : PWideChar; pwcBolsa : PWideChar) : Integer; stdcall;
+
+function UnsubscribeOfferBook(pwcTicker : PWideChar; pwcBolsa : PWideChar) : Integer; stdcall;
+
 function GetAgentNameByID(nID : Integer) : PWideChar; stdcall;
+
 function GetAgentShortNameByID(nID : Integer) : PWideChar; stdcall;
-function GetAgentNameLength(nAgentID : Integer; nShortName : Cardinal): Integer;
-stdcall;
+
+function GetAgentNameLength(nAgentID : Integer; nShortName : Cardinal): Integer; stdcall;
+
 function GetAgentName(
     nCount : Integer;
     nAgentID : Integer;
     pwcAgent : PWideChar;
     nShortName : Cardinal) : Integer; stdcall;
+
 function GetAccount : Integer; stdcall;
+
 function SendBuyOrder(
     pwcIDAccount   : PWideChar;
     pwcIDCorretora : PWideChar;
@@ -950,6 +1115,7 @@ function SendBuyOrder(
     pwcBolsa       : PWideChar;
     dPrice         : Double;
     nAmount        : Integer) : Int64; stdcall;
+
 function SendSellOrder(
     pwcIDAccount   : PWideChar;
     pwcIDCorretora : PWideChar;
@@ -958,6 +1124,7 @@ function SendSellOrder(
     pwcBolsa       : PWideChar;
     dPrice         : Double;
     nAmount        : Integer) : Int64; stdcall;
+
 function SendMarketBuyOrder(
     pwcIDAccount   : PWideChar;
     pwcIDCorretora : PWideChar;
@@ -965,6 +1132,7 @@ function SendMarketBuyOrder(
     pwcTicker      : PWideChar;
     pwcBolsa       : PWideChar;
     nAmount        : Integer) : Int64; stdcall;
+
 function SendMarketSellOrder(
     pwcIDAccount   : PWideChar;
     pwcIDCorretora : PWideChar;
@@ -972,6 +1140,7 @@ function SendMarketSellOrder(
     pwcTicker      : PWideChar;
     pwcBolsa       : PWideChar;
     nAmount        : Integer) : Int64; stdcall;
+
 function SendStopBuyOrder(
     pwcIDAccount   : PWideChar;
     pwcIDCorretora : PWideChar;
@@ -981,6 +1150,7 @@ function SendStopBuyOrder(
     dPrice         : Double;
     dStopPrice     : Double;
     nAmount        : Integer) : Int64; stdcall;
+
 function SendStopSellOrder(
     pwcIDAccount   : PWideChar;
     pwcIDCorretora : PWideChar;
@@ -990,6 +1160,7 @@ function SendStopSellOrder(
     dPrice         : Double;
     dStopPrice     : Double;
     nAmount        : Integer) : Int64; stdcall;
+
 function SendChangeOrder(
     pwcIDAccount   : PWideChar;
     pwcIDCorretora : PWideChar;
@@ -997,21 +1168,25 @@ function SendChangeOrder(
     pwcstrClOrdID  : PWideChar;
     dPrice         : Double;
     nAmount        : Integer) : Integer; stdcall;
+
 function SendCancelOrder(
     pwcIDAccount   : PWideChar;
     pwcIDCorretora : PWideChar;
     pwcClOrdId     : PWideChar;
     pwcSenha       : PWideChar) : Integer; stdcall;
+
 function SendCancelOrders(
     pwcIDAccount   : PWideChar;
     pwcIDCorretora : PWideChar;
     pwcSenha       : PWideChar;
     pwcTicker      : PWideChar;
     pwcBolsa       : PWideChar) : Integer; stdcall;
+
 function SendCancelAllOrders(
     pwcIDAccount   : PWideChar;
     pwcIDCorretora : PWideChar;
     pwcSenha       : PWideChar) : Integer; stdcall;
+
 function SendZeroPosition(
     pwcIDAccount   : PWideChar;
     pwcIDCorretora : PWideChar;
@@ -1019,52 +1194,56 @@ function SendZeroPosition(
     pwcBolsa       : PWideChar;
     pwcSenha       : PWideChar;
     dPrice         : Double) : Int64; stdcall;
+
 function SendZeroPositionAtMarket(
     pwcIDAccount   : PWideChar;
     pwcIDCorretora : PWideChar;
     pwcTicker      : PWideChar;
     pwcBolsa       : PWideChar;
     pwcSenha       : PWideChar) : Int64; stdcall;
+
 function GetOrders(
     pwcIDAccount   : PWideChar;
     pwcIDCorretora : PWideChar;
     dtStart        : PWideChar;
     dtEnd          : PWideChar) : Integer; stdcall;
+
 function GetOrder(pwcClOrdId : PWideChar) : Integer; stdcall;
+
 function GetOrderProfitID(nProfitID : Int64): Integer; stdcall;
+
 function GetPosition(
     pwcIDAccount   : PWideChar;
     pwcIDCorretora : PWideChar;
     pwcTicker      : PWideChar;
     pwcBolsa       : PWideChar) : Pointer; stdcall;
+
 function GetHistoryTrades(
     const pwcTicker : PWideChar;
     const pwcBolsa  : PWideChar;
     dtDateStart     : PWideChar;
     dtDateEnd       : PWideChar) : Integer; stdcall;
-function SendOrder             (const a_SendOrder    : PConnectorSendOrder)       :
-Int64;   stdcall;
-function SendChangeOrderV2     (const a_ChangeOrder  : PConnectorChangeOrder)     :
-Integer; stdcall;
-function SendCancelOrderV2     (const a_CancelOrder  : PConnectorCancelOrder)     :
-Integer; stdcall;
-function SendCancelOrdersV2    (const a_CancelOrder  : PConnectorCancelOrders)    :
-Integer; stdcall;
-function SendCancelAllOrdersV2 (const a_CancelOrder  : PConnectorCancelAllOrders) :
-Integer; stdcall;
-function SendZeroPositionV2    (const a_ZeroPosition : PConnectorZeroPosition)    :
-Int64;   stdcall;
+
+function SendOrder             (const a_SendOrder    : PConnectorSendOrder)       : Int64;   stdcall;
+function SendChangeOrderV2     (const a_ChangeOrder  : PConnectorChangeOrder)     : Integer; stdcall;
+function SendCancelOrderV2     (const a_CancelOrder  : PConnectorCancelOrder)     : Integer; stdcall;
+function SendCancelOrdersV2    (const a_CancelOrder  : PConnectorCancelOrders)    : Integer; stdcall;
+function SendCancelAllOrdersV2 (const a_CancelOrder  : PConnectorCancelAllOrders) : Integer; stdcall;
+function SendZeroPositionV2    (const a_ZeroPosition : PConnectorZeroPosition)    : Int64;   stdcall;
+
 function GetAccountCount : Integer; stdcall;
+
 function GetAccounts(
   const a_nStartSource : Integer;
   const a_nStartDest   : Integer;
   const a_nCount       : Integer;
   const a_arAccounts   : PConnectorAccountIdentifierArrayOut
 ) : Integer; stdcall;
-function GetAccountDetails(var a_Account : TConnectorTradingAccountOut) : Integer;
-stdcall;
-function GetSubAccountCount(const a_MasterAccountID : PConnectorAccountIdentifier) :
-Integer; stdcall;
+
+function GetAccountDetails(var a_Account : TConnectorTradingAccountOut) : Integer; stdcall;
+
+function GetSubAccountCount(const a_MasterAccountID : PConnectorAccountIdentifier) : Integer; stdcall;
+
 function GetSubAccounts(
   const a_MasterAccountID : PConnectorAccountIdentifier;
   const a_nStartSource    : Integer;
@@ -1072,11 +1251,13 @@ function GetSubAccounts(
   const a_nCount          : Integer;
   const a_arAccounts      : PConnectorAccountIdentifierArrayOut
 ) : Integer; stdcall;
-function GetPositionV2(var a_Position : TConnectorTradingAccountPosition) : Integer;
-stdcall;
+
+function GetPositionV2(var a_Position : TConnectorTradingAccountPosition) : Integer; stdcall;
+
 function GetOrderDetails(var a_Order : TConnectorOrderOut) : Integer; stdcall;
-function HasOrdersInInterval(const a_AccountID : PConnectorAccountIdentifier; const
-a_dtStart : TSystemTime; const a_dtEnd : TSystemTime) : Integer; stdcall;
+
+function HasOrdersInInterval(const a_AccountID : PConnectorAccountIdentifier; const a_dtStart : TSystemTime; const a_dtEnd : TSystemTime) : Integer; stdcall;
+
 function EnumerateOrdersByInterval(
   const a_AccountID    : PConnectorAccountIdentifier;
   const a_OrderVersion : Byte;
@@ -1085,105 +1266,114 @@ function EnumerateOrdersByInterval(
   const a_Param        : LPARAM;
   const a_Callback     : TConnectorEnumerateOrdersProc
 ) : Integer; stdcall;
+
 function EnumerateAllOrders(
   const a_AccountID    : PConnectorAccountIdentifier;
   const a_OrderVersion : Byte;
   const a_Param        : LPARAM;
   const a_Callback     : TConnectorEnumerateOrdersProc
 ) : Integer; stdcall;
-function TranslateTrade(const a_pTrade : Pointer; var a_Trade : TConnectorTrade) :
-Integer; stdcall;
+
+function TranslateTrade(const a_pTrade : Pointer; var a_Trade : TConnectorTrade) : Integer; stdcall;
+
 function  SubscribePriceDepth(const a_pAssetID : PConnectorAssetIdentifier) :
 Integer; stdcall;
-function  UnsubscribePriceDepth(const a_pAssetID : PConnectorAssetIdentifier) :
-Integer; stdcall;
-function  GetPriceDepthSideCount(const a_pAssetID : PConnectorAssetIdentifier; const
-a_nSide : Byte) : Integer; stdcall;
-function  GetPriceGroup(const a_pAssetID : PConnectorAssetIdentifier; const a_nSide :
-Byte; const a_nPosition : Integer; const a_pPrice : PConnectorPriceGroup) : Integer;
-stdcall;
-function  GetTheoreticalValues(const a_pAssetID : PConnectorAssetIdentifier; out
-a_dPrice : Double; out a_nQuantity : Int64) : Integer; stdcall;
+function  UnsubscribePriceDepth(const a_pAssetID : PConnectorAssetIdentifier) : Integer; stdcall;
+
+function  GetPriceDepthSideCount(const a_pAssetID : PConnectorAssetIdentifier; const a_nSide : Byte) : Integer; stdcall;
+function  GetPriceGroup(const a_pAssetID : PConnectorAssetIdentifier; const a_nSide : Byte; const a_nPosition : Integer; const a_pPrice : PConnectorPriceGroup) : Integer; stdcall;
+
+function  GetTheoreticalValues(const a_pAssetID : PConnectorAssetIdentifier; out a_dPrice : Double; out a_nQuantity : Int64) : Integer; stdcall;
+
 function SetServerAndPort(const strServer, strPort : PWideChar) : Integer; stdcall;
-function GetServerClock (var dtDate : Double; var nYear, nMonth, nDay, nHour, nMin,
-nSec, nMilisec: Integer) : Integer; stdcall;
+
+function GetServerClock (var dtDate : Double; var nYear, nMonth, nDay, nHour, nMin, nSec, nMilisec: Integer) : Integer; stdcall;
+
 function GetHealthStatus(var nState : Integer) : Integer; stdcall;
+
 function SetDayTrade(bUseDayTrade : Integer): Integer; stdcall; forward;
+
 function SetEnabledHistOrder(bEnabled : Integer) : Integer; stdcall; forward;
+
 function SetEnabledLogToDebug(bEnabled : Integer) : Integer; stdcall; forward;
-function RequestTickerInfo(const pwcTicker : PWideChar; const pwcBolsa : PWideChar) :
-Integer; stdcall; forward;
-function SubscribeAdjustHistory(pwcTicker : PWideChar; pwcBolsa : PWideChar) :
-Integer; stdcall;
-function UnsubscribeAdjustHistory(pwcTicker : PWideChar; pwcBolsa : PWideChar) :
-Integer; stdcall;
+
+function RequestTickerInfo(const pwcTicker : PWideChar; const pwcBolsa : PWideChar) : Integer; stdcall; forward;
+
+function SubscribeAdjustHistory(pwcTicker : PWideChar; pwcBolsa : PWideChar) : Integer; stdcall;
+
+function UnsubscribeAdjustHistory(pwcTicker : PWideChar; pwcBolsa : PWideChar) : Integer; stdcall;
+
 function GetLastDailyClose(const pwcTicker, pwcBolsa: var dClose : Double; bAdjusted
 : Integer) : Integer; stdcall;
+
 function SetStateCallback(const a_StateCallback : TStateCallback) : Integer; stdcall;
-function SetHealthCallback(const a_HealthCallback : TSystemHealthCallback) : Integer;
-stdcall;
-function SetAssetListCallback(const a_AssetListCallback : TAssetListCallback) :
-Integer; stdcall;
-function SetAssetListInfoCallback(const a_AssetListInfoCallback :
-TAssetListInfoCallback) : Integer; stdcall;
-function SetAssetListInfoCallbackV2(const a_AssetListInfoCallbackV2 :
-TAssetListInfoCallbackV2) : Integer; stdcall;
-function SetInvalidTickerCallback(const a_InvalidTickerCallback :
-TInvalidTickerCallback) : Integer; stdcall;
+
+function SetHealthCallback(const a_HealthCallback : TSystemHealthCallback) : Integer; stdcall;
+
+function SetAssetListCallback(const a_AssetListCallback : TAssetListCallback) : Integer; stdcall;
+
+function SetAssetListInfoCallback(const a_AssetListInfoCallback : TAssetListInfoCallback) : Integer; stdcall;
+
+function SetAssetListInfoCallbackV2(const a_AssetListInfoCallbackV2 : TAssetListInfoCallbackV2) : Integer; stdcall;
+
+function SetInvalidTickerCallback(const a_InvalidTickerCallback : TInvalidTickerCallback) : Integer; stdcall;
+
 function SetTradeCallback(const a_TradeCallback : TTradeCallback) : Integer; stdcall;
+
 function SetHistoryTradeCallback(const a_HistoryTradeCallback :
 THistoryTradeCallback) : Integer; stdcall;
+
 function SetDailyCallback(const a_DailyCallback : TDailyCallback) : Integer; stdcall;
-function SetTheoreticalPriceCallback(const a_TheoreticalPriceCallback :
-TTheoreticalPriceCallback) : Integer; stdcall;
-function SetTinyBookCallback(const a_TinyBookCallback : TTinyBookCallback) : Integer;
-stdcall;
-function SetChangeCotationCallback(const a_ChangeCotation : TChangeCotation) :
-Integer; stdcall;
-function SetChangeStateTickerCallback(const a_ChangeStateTicker : TChangeStateTicker)
-: Integer; stdcall;
+
+function SetTheoreticalPriceCallback(const a_TheoreticalPriceCallback : TTheoreticalPriceCallback) : Integer; stdcall;
+
+function SetTinyBookCallback(const a_TinyBookCallback : TTinyBookCallback) : Integer; stdcall;
+
+function SetChangeCotationCallback(const a_ChangeCotation : TChangeCotation) : Integer; stdcall;
+
+function SetChangeStateTickerCallback(const a_ChangeStateTicker : TChangeStateTicker) : Integer; stdcall;
+
 function SetSerieProgressCallback(const a_SerieProgressCallback : TProgressCallback)
 : Integer; stdcall;
-function SetOfferBookCallback(const a_OfferBookCallback : TOfferBookCallback) :
-Integer; stdcall;
-function SetOfferBookCallbackV2(const a_OfferBookCallbackV2 : TOfferBookCallbackV2) :
-Integer; stdcall;
-function SetPriceBookCallback(const a_PriceBookCallback : TPriceBookCallback) :
-Integer; stdcall;
-function SetPriceBookCallbackV2(const a_PriceBookCallbackV2 : TPriceBookCallbackV2) :
-Integer; stdcall;
-function SetAdjustHistoryCallback(const a_AdjustHistoryCallback :
-TAdjustHistoryCallback) : Integer; stdcall;
-function SetAdjustHistoryCallbackV2(const a_AdjustHistoryCallbackV2 :
-TAdjustHistoryCallbackV2) : Integer; stdcall;
-function SetAssetPositionListCallback(const a_AssetPositionListCallback :
-TConnectorAssetPositionListCallback) : Integer; stdcall;
-function SetAccountCallback(const a_AccountCallback : TAccountCallback) : Integer;
-stdcall;
-function SetHistoryCallback(const a_HistoryCallback : THistoryCallback) : Integer;
-stdcall;
-function SetHistoryCallbackV2(const a_HistoryCallbackV2 : THistoryCallbackV2) :
-Integer; stdcall;
-function SetOrderChangeCallback(const a_OrderChangeCallback : TOrderChangeCallback) :
-Integer; stdcall;
-function SetOrderChangeCallbackV2(const a_OrderChangeCallbackV2 :
-TOrderChangeCallbackV2) : Integer; stdcall;
-function SetOrderCallback(const a_OrderCallback : TConnectorOrderCallback) : Integer;
-stdcall;
-function SetOrderHistoryCallback(const a_OrderHistoryCallback :
-TConnectorAccountCallback) : Integer; stdcall;
-function SetTradeCallbackV2(const a_TradeCallbackV2 : TConnectorTradeCallback) :
-Integer; stdcall;
-function SetHistoryTradeCallbackV2(const a_HistoryTradeCallbackV2 :
-TConnectorTradeCallback) : Integer; stdcall;
+
+function SetOfferBookCallback(const a_OfferBookCallback : TOfferBookCallback) : Integer; stdcall;
+
+function SetOfferBookCallbackV2(const a_OfferBookCallbackV2 : TOfferBookCallbackV2) : Integer; stdcall;
+
+function SetPriceBookCallback(const a_PriceBookCallback : TPriceBookCallback) : Integer; stdcall;
+
+function SetPriceBookCallbackV2(const a_PriceBookCallbackV2 : TPriceBookCallbackV2) : Integer; stdcall;
+
+function SetAdjustHistoryCallback(const a_AdjustHistoryCallback : TAdjustHistoryCallback) : Integer; stdcall;
+
+function SetAdjustHistoryCallbackV2(const a_AdjustHistoryCallbackV2 : TAdjustHistoryCallbackV2) : Integer; stdcall;
+
+function SetAssetPositionListCallback(const a_AssetPositionListCallback : TConnectorAssetPositionListCallback) : Integer; stdcall;
+
+function SetAccountCallback(const a_AccountCallback : TAccountCallback) : Integer; stdcall;
+
+function SetHistoryCallback(const a_HistoryCallback : THistoryCallback) : Integer; stdcall;
+
+function SetHistoryCallbackV2(const a_HistoryCallbackV2 : THistoryCallbackV2) : Integer; stdcall;
+
+function SetOrderChangeCallback(const a_OrderChangeCallback : TOrderChangeCallback) : Integer; stdcall;
+
+function SetOrderChangeCallbackV2(const a_OrderChangeCallbackV2 : TOrderChangeCallbackV2) : Integer; stdcall;
+
+function SetOrderCallback(const a_OrderCallback : TConnectorOrderCallback) : Integer; stdcall;
+
+function SetOrderHistoryCallback(const a_OrderHistoryCallback : TConnectorAccountCallback) : Integer; stdcall;
+
+function SetTradeCallbackV2(const a_TradeCallbackV2 : TConnectorTradeCallback) : Integer; stdcall;
+
+function SetHistoryTradeCallbackV2(const a_HistoryTradeCallbackV2 : TConnectorTradeCallback) : Integer; stdcall;
 ```
 
 #### `DLLInitializeLogin`
 
 | Name | Type | Description |
 |---|---|---|
-| const | PWideChar | Activation key provided for login |
-| pwcActivationKey |   |   |
+| const pwcActivationKey | PWideChar | Activation key provided for login |
 | const pwcUser | PWideChar | User for login of the account corresponding to the activation key |
 | const pwcPassword | PWideChar | Login password |
 | StateCallback | TStateCallback | Connection state callback |
@@ -1204,8 +1394,7 @@ Function to initialize the Market Data and Routing services of the DLL. It will 
 
 | Name | Type | Description |
 |---|---|---|
-| const | PWideChar | Activation key provided for login |
-| pwcActivationKey |   |   |
+| const pwcActivationKey | PWideChar | Activation key provided for login |
 | const pwcUser | PWideChar | User for login of the account corresponding to the activation key |
 | const pwcPassword | PWideChar | Login password |
 | StateCallback | TStateCallback | Connection state callback |
@@ -1230,7 +1419,9 @@ Function used to terminate the services of the DLL.
 | const strServer | Double | Address of the Market Data server |
 | const strPort | Integer | Port of the Market Data server |
 
-This is used to connect to specific Market Data servers and needs to be called before initialization (DLLInitialize or InitializeMarket). `Important`: Only use this function with guidance from the development team; the DLL operates best by internally selecting the servers.
+This is used to connect to specific Market Data servers and needs to be called before initialization (DLLInitialize or InitializeMarket).
+
+`Important`: Only use this function with guidance from the development team; the DLL operates best by internally selecting the servers.
 
 #### `GetServerClock`
 
@@ -1264,7 +1455,11 @@ Returns the time of the Market Data server; it can only be called after initiali
 | var dClose | Double | Returned closing value of the last session |
 | bAdjusted | Integer | Indicates whether to adjust the price |
 
-The function returns the closing value (dClose) of the candle prior to the current day, according to the bAdjusted parameter. If bAdjusted is 0, the unadjusted value is returned; otherwise, the adjusted value is returned. For the function to return NL_OK with data, SubscribeTicker must have been called previously for the same asset. On the first call to the function, data is requested from the server, and the function returns NL_WAITING_SERVER. All subsequent calls for the same asset return the data already loaded. Invalid assets return NL_ERR_INVALID_ARGS. If the daily series data or adjustments are not previously loaded, this call will load them and consequently trigger the progressCallback and adjustHistoryCallback callbacks.
+The function returns the closing value (dClose) of the candle prior to the current day, according to the bAdjusted parameter. If bAdjusted is 0, the unadjusted value is returned; otherwise, the adjusted value is returned.
+
+For the function to return NL_OK with data, SubscribeTicker must have been called previously for the same asset. On the first call to the function, data is requested from the server, and the function returns NL_WAITING_SERVER.
+
+All subsequent calls for the same asset return the data already loaded. Invalid assets return NL_ERR_INVALID_ARGS. If the daily series data or adjustments are not previously loaded, this call will load them and consequently trigger the progressCallback and adjustHistoryCallback callbacks.
 
 #### `SubscribeTicker`
 
@@ -1309,7 +1504,9 @@ Requests the Market Data service to stop sending real-time order book updates fo
 | const pwcTicker | PWideChar | Ticker of the asset |
 | const pwcBolsa | PWideChar | Exchange of the asset |
 
-It is used to receive real-time price market depth information. The information is received after subscription as soon as it becomes available through the callback specified in the `PriceBookCallback` parameter of the initialization function. In case of an invalid ticker request, an event will be triggered in the callback defined by `SetInvalidTickerCallback`. UnsubscribePriceBook disables this service. Deprecated: This function has been replaced by `SubscribePriceDepth`.
+It is used to receive real-time price market depth information. The information is received after subscription as soon as it becomes available through the callback specified in the `PriceBookCallback` parameter of the initialization function. In case of an invalid ticker request, an event will be triggered in the callback defined by `SetInvalidTickerCallback`. UnsubscribePriceBook disables this service.
+
+**Deprecated**: This function has been replaced by `SubscribePriceDepth`.
 
 #### `UnsubscribePriceBook`
 
@@ -1318,9 +1515,14 @@ It is used to receive real-time price market depth information. The information 
 | const pwcTicker | PWideChar | Ticker of the asset |
 | const pwcBolsa | PWideChar | Exchange of the asset |
 
-Requests the Market Data service to stop sending real-time price market depth updates for a specific asset. Deprecated: This function has been replaced by `UnsubscribePriceDepth`. The calls for Subscribe and Unsubscribe `SubscribeTicker`, `UnsubscribeTicker`, `SubscribePriceBook`, `UnsubscribePriceBook`, `SubscribeOfferBook`, `UnsubscribeOfferBook` receive their parameters in the following pattern:
+Requests the Market Data service to stop sending real-time price market depth updates for a specific asset.
 
-- Ticker: PETR4, Exchange: B Ticker: WINFUT, Exchange: F
+**Deprecated**: This function has been replaced by `UnsubscribePriceDepth`.
+
+The calls for Subscribe and Unsubscribe `SubscribeTicker`, `UnsubscribeTicker`, `SubscribePriceBook`, `UnsubscribePriceBook`, `SubscribeOfferBook`, `UnsubscribeOfferBook` receive their parameters in the following pattern:
+
+- Ticker: PETR4, Exchange: B
+- Ticker: WINFUT, Exchange: F
 
 More examples of exchanges can be found in the declarations section.
 
@@ -1348,7 +1550,9 @@ Requests the Market Data service to stop sending adjustment information for a sp
 |---|---|---|
 | nID | Integer | Identifier of the trading agent |
 
-The returned value provides the full name and abbreviated name of this agent, respectively. Deprecated: Use `GetAgentName` with `GetAgentNameLength` instead to get the agent name.
+The returned value provides the full name and abbreviated name of this agent, respectively.
+
+**Deprecated**: Use `GetAgentName` with `GetAgentNameLength` instead to get the agent name.
 
 #### `GetAgentNameLength`
 
@@ -1372,22 +1576,18 @@ The returned value provides the full or abbreviated name of the agent according 
 
 #### `GetHistoryTrades`
 
-| NameType | Description |
-|---|---|
-| const |   |
-| PWideChar | Ticker of the asset |
-| pwcTicker |   |
-| const |   |
-| PWideChar | Exchange of the asset |
-| pwcBolsa |   |
-| dtDateStartPWideChar | Start date of the request in the format DD/MM/YYYY HH:mm:SS (mm = minute, MM = month) |
-| dtDateEndPWideChar | End date of the request in the format DD/MM/YYYY HH:mm:SS (mm = minute, MM = month) |
+| Name | Type | Description |
+|---|---|---|
+| const pwcTicker | PWideChar | Ticker of the asset |
+| const pwcBolsa | PWideChar | Exchange of the asset |
+| dtDateStart | PWideChar | Start date of the request in the format DD/MM/YYYY HH:mm:SS (mm = minute, MM = month) |
+| dtDateEnd | PWideChar | End date of the request in the format DD/MM/YYYY HH:mm:SS (mm = minute, MM = month) |
 
 This is used to request historical information for an asset starting from a specific date (pwcTicker = 'PETR4'; dtDateStart = '06/08/2018 09:00:00'; dtDateEnd = '06/08/2018 18:00:00'). The return will be given in the callback function `THistoryTradeCallback` specified as a parameter in the initialization function. The `TProgressCallback` will return the download progress (from 1 to 100).
 
-Period limit: requests whose start date (`dtDateStart`) is older than 30 days relative to the current server
-date are rejected with the `NL_HISTORY_PERIOD_LIMIT` return code. To retrieve older trade/tick data, set
-`dtDateStart` within the last 30 days.
+> **Period limit:** requests whose start date (`dtDateStart`) is older than 30 days relative to the current server date are rejected with the `NL_HISTORY_PERIOD_LIMIT` return code. To retrieve older trade/tick data, set `dtDateStart` within the last 30 days.
+
+> **WIN and WDO range limit:** for tickers starting with `WIN` or `WDO`, the range between `dtDateStart` and `dtDateEnd` cannot reach 10 days; larger requests are rejected with `NL_INVALID_ARGS`.
 
 #### `SetDayTrade`
 
@@ -1412,7 +1612,9 @@ Function to determine if the DLL should save logs for debugging (1 = save / 0 = 
 | const pwcTicker | PWideChar | Ticker of the asset |
 | const pwcBolsa | PWideChar | Exchange of the asset |
 
-This is used to fetch new information about the asset (ex., ISIN). The response is returned in the callbacks `TAssetListInfoCallback`, `TAssetListInfoCallbackV2`, and `TAssetListCallback`, provided they have been set in the DLL via the functions `SetAssetListInfoCallback`, `SetAssetListInfoCallbackV2`, and `SetAssetListCallback`. In case of an invalid ticker request, an event will be triggered in the callback defined by `SetInvalidTickerCallback`. The functions below provide a callback address for the DLL to return information. They are optional for using the library. If they are not specified, the corresponding information will not be provided when requested.
+This is used to fetch new information about the asset (ex., ISIN). The response is returned in the callbacks `TAssetListInfoCallback`, `TAssetListInfoCallbackV2`, and `TAssetListCallback`, provided they have been set in the DLL via the functions `SetAssetListInfoCallback`, `SetAssetListInfoCallbackV2`, and `SetAssetListCallback`. In case of an invalid ticker request, an event will be triggered in the callback defined by `SetInvalidTickerCallback`.
+
+The functions below provide a callback address for the DLL to return information. They are optional for using the library. If they are not specified, the corresponding information will not be provided when requested.
 
 #### `SetChangeCotationCallback`
 
@@ -1452,11 +1654,15 @@ Used to set the callback function of type `TTheoreticalPriceCallback`, which rec
 
 #### `SetHistoryCallbackV2`
 
-Used to set the callback function of type `THistoryCallbackV2`, which is similar to `THistoryCallback` and receives order history. Deprecated: Use `SerOrderHistoryCallback` instead.
+Used to set the callback function of type `THistoryCallbackV2`, which is similar to `THistoryCallback` and receives order history.
+
+**Deprecated**: Use `SerOrderHistoryCallback` instead.
 
 #### `SetOrderChangeCallbackV2`
 
-Used to set the callback function of type `TOrderChangeCallbackV2`, which is similar to `TOrderChangeCallback` and receives updates about orders. Deprecated: Use `SetOrderCallback` instead.
+Used to set the callback function of type `TOrderChangeCallbackV2`, which is similar to `TOrderChangeCallback` and receives updates about orders.
+
+**Deprecated**: Use `SetOrderCallback` instead.
 
 #### `SetOfferBookCallbackV2`
 
@@ -1464,7 +1670,9 @@ Used to set the callback function of type `TOfferBookCallbackV2`, which is simil
 
 #### `SetPriceBookCallbackV2`
 
-Used to set the callback function of type `TPriceBookCallbackV2`, which is similar to `TPriceBookCallback` and receives the price market depth in a new format. Deprecated: This function has been replaced by `SetPriceDepthCallback`.
+Used to set the callback function of type `TPriceBookCallbackV2`, which is similar to `TPriceBookCallback` and receives the price market depth in a new format.
+
+**Deprecated**: This function has been replaced by `SetPriceDepthCallback`.
 
 #### `SetStateCallback`
 
@@ -1476,7 +1684,9 @@ Used to define the callback function of type `TSystemHealthCallback`, which noti
 
 #### `SetTradeCallback`
 
-Used to define the callback function of type `TTradeCallback`. This overrides the callback defined by `DLLInitializeLogin` or `DLLInitializeMarketLogin`. Deprecated: Use the `SetTradeCallbackV2` callback.
+Used to define the callback function of type `TTradeCallback`. This overrides the callback defined by `DLLInitializeLogin` or `DLLInitializeMarketLogin`.
+
+**Deprecated**: Use the `SetTradeCallbackV2` callback.
 
 #### `SetHistoryTradeCallback`
 
@@ -1496,7 +1706,9 @@ Used to define the callback function of type `TOfferBookCallback`. This override
 
 #### `SetPriceBookCallback`
 
-Used to define the callback function of type `TPriceBookCallback`. This overrides the callback defined by `DLLInitializeLogin` or `DLLInitializeMarketLogin`. Deprecated: This function has been replaced by `SetPriceDepthCallback`.
+Used to define the callback function of type `TPriceBookCallback`. This overrides the callback defined by `DLLInitializeLogin` or `DLLInitializeMarketLogin`.
+
+**Deprecated**: This function has been replaced by `SetPriceDepthCallback`.
 
 #### `SetAssetPositionListCallback`
 
@@ -1508,11 +1720,15 @@ Used to define the callback function of type `TAccountCallback`. This overrides 
 
 #### `SetHistoryCallback`
 
-Used to define the callback function of type `THistoryCallback`. This overrides the callback defined by `DLLInitializeLogin`. Deprecated: Use `SerOrderHistoryCallback` instead.
+Used to define the callback function of type `THistoryCallback`. This overrides the callback defined by `DLLInitializeLogin`.
+
+**Deprecated**: Use `SerOrderHistoryCallback` instead.
 
 #### `SetOrderChangeCallback`
 
-Used to define the callback function of type `TOrderChangeCallback`. This overrides the callback defined by `DLLInitializeLogin`. Deprecated: Use `SetOrderCallback` instead.
+Used to define the callback function of type `TOrderChangeCallback`. This overrides the callback defined by `DLLInitializeLogin`.
+
+**Deprecated**: Use `SetOrderCallback` instead.
 
 #### `SetOrderCallback`
 
@@ -1520,15 +1736,21 @@ Used to define the callback function of type `TConnectorOrderCallback`. If a cal
 
 #### `SetOrderHistoryCallback`
 
-Used to define a callback function of type `TConnectorAccountCallback`. Fired when the order history for a particular account has completed loading. When subscribing to this callback, the callbacks defined in `SetHistoryCallback`, `SetHistoryCallbackV2` and `SetOrderCallback` will not fire when, *and only when*, the order history is loaded. Other uses for those callbacks retain their behavior.
+Used to define a callback function of type `TConnectorAccountCallback`. Fired when the order history for a particular account has completed loading.
+
+When subscribing to this callback, the callbacks defined in `SetHistoryCallback`, `SetHistoryCallbackV2` and `SetOrderCallback` will **not** fire when, *and only when*, the order history is loaded. Other uses for those callbacks retain their behavior.
 
 #### `SetTradeCallbackV2`
 
-Used to define a callback function of type `TConnectorTradeCallback`. Fired when an instrument receives a new trade. Use the function `TranslateTrade` to translate the pointer received in this callback. The `a_nFlags` parameter can have the flag `TC_IS_EDIT`, indicating an edit.
+Used to define a callback function of type `TConnectorTradeCallback`. Fired when an instrument receives a new trade. Use the function `TranslateTrade` to translate the pointer received in this callback.
+
+The `a_nFlags` parameter can have the flag `TC_IS_EDIT`, indicating an edit.
 
 #### `SetHistoryTradeCallbackV2`
 
-Used to define a callback function of type `TConnectorTradeCallback`. Fired while receiving trade history. Use the function `TranslateTrade` to translate the pointer received in this callback. The `a_nFlags` parameter can have the flag `TC_LAST_PACKET`, indicating the last trade of that particular history.
+Used to define a callback function of type `TConnectorTradeCallback`. Fired while receiving trade history. Use the function `TranslateTrade` to translate the pointer received in this callback.
+
+The `a_nFlags` parameter can have the flag `TC_LAST_PACKET`, indicating the last trade of that particular history.
 
 #### `SetPriceDepthCallback`
 
@@ -1536,11 +1758,15 @@ Used to define a funtion of type `TConnectorPriceDepthCallback`. Fired for any a
 
 #### `SetTradingMessageResultCallback`
 
-Used to define a funtion of type `TConnectorTradingMessageResultCallback`. Fired for every message received from the trading server. The functions described below are only available for initialization with routing after using the `DLLInitializeLogin` function during initialization.
+Used to define a funtion of type `TConnectorTradingMessageResultCallback`. Fired for every message received from the trading server.
+
+The functions described below are only available for initialization with routing after using the `DLLInitializeLogin` function during initialization.
 
 #### `GetAccount`
 
-Function that returns information about linked accounts through the `TAccountCallback` passed as a parameter to the initialization function. The enumeration reflects the accounts known at the time of the call. Since the account list is processed asynchronously after login, a call made immediately after the connection state callbacks may return a partial roster. Accounts that arrive later are delivered automatically through `TAccountCallback`
+Function that returns information about linked accounts through the `TAccountCallback` passed as a parameter to the initialization function.
+
+The enumeration reflects the accounts known **at the time of the call**. Since the account list is processed asynchronously after login, a call made immediately after the connection state callbacks may return a partial roster. Accounts that arrive later are delivered automatically through `TAccountCallback`
 
 #### `SendBuyOrder`
 
@@ -1554,7 +1780,9 @@ Function that returns information about linked accounts through the `TAccountCal
 | dPrice | Double | Target price |
 | nAmount | Integer | Quantity to be traded |
 
-Sends a limit buy order. Returns the internal ID (per session) of the order that can be compared with the return of `THistoryCallback`. Function deprecated in favor of function `SendOrder`.
+Sends a limit buy order. Returns the internal ID (per session) of the order that can be compared with the return of `THistoryCallback`.
+
+Function deprecated in favor of function `SendOrder`.
 
 #### `SendSellOrder`
 
@@ -1568,7 +1796,9 @@ Sends a limit buy order. Returns the internal ID (per session) of the order that
 | dPrice | Double | Target price |
 | nAmount | Integer | Quantity to be traded |
 
-Sends a limit sell order. Returns the internal ID (per session) of the order that can be compared with the return of `THistoryCallback`. Function deprecated in favor of function `SendOrder`.
+Sends a limit sell order. Returns the internal ID (per session) of the order that can be compared with the return of `THistoryCallback`.
+
+Function deprecated in favor of function `SendOrder`.
 
 #### `SendMarketBuyOrder`
 
@@ -1581,7 +1811,9 @@ Sends a limit sell order. Returns the internal ID (per session) of the order tha
 | pwcBolsa | PWideChar | Exchange of the asset to be traded |
 | nAmount | Integer | Quantity to be traded |
 
-Sends a market buy order. Returns the internal ID (per session) of the order that can be compared with the return of `THistoryCallback`. Function deprecated in favor of function `SendOrder`.
+Sends a market buy order. Returns the internal ID (per session) of the order that can be compared with the return of `THistoryCallback`.
+
+Function deprecated in favor of function `SendOrder`.
 
 #### `SendMarketSellOrder`
 
@@ -1594,7 +1826,9 @@ Sends a market buy order. Returns the internal ID (per session) of the order tha
 | pwcBolsa | PWideChar | Exchange of the asset to be traded |
 | nAmount | Integer | Quantity to be traded |
 
-Sends a market sell order. Returns the internal ID (per session) of the order that can be compared with the return of `THistoryCallback`. Function deprecated in favor of function `SendOrder`.
+Sends a market sell order. Returns the internal ID (per session) of the order that can be compared with the return of `THistoryCallback`.
+
+Function deprecated in favor of function `SendOrder`.
 
 #### `SendStopBuyOrder`
 
@@ -1609,7 +1843,9 @@ Sends a market sell order. Returns the internal ID (per session) of the order th
 | dStopPrice | Double | Stop price |
 | nAmount | Integer | Quantity to be traded |
 
-Sends a stop buy order. Returns the internal ID (per session) of the order that can be compared with the return of `THistoryCallback`. Function deprecated in favor of function `SendOrder`.
+Sends a stop buy order. Returns the internal ID (per session) of the order that can be compared with the return of `THistoryCallback`.
+
+Function deprecated in favor of function `SendOrder`.
 
 #### `SendStopSellOrder`
 
@@ -1624,7 +1860,9 @@ Sends a stop buy order. Returns the internal ID (per session) of the order that 
 | dStopPrice | Double | Stop price |
 | nAmount | Integer | Quantity to be traded |
 
-Sends a stop sell order. Returns the internal ID (per session) of the order that can be compared with the return of `THistoryCallback`. Function deprecated in favor of function `SendOrder`.
+Sends a stop sell order. Returns the internal ID (per session) of the order that can be compared with the return of `THistoryCallback`.
+
+Function deprecated in favor of function `SendOrder`.
 
 #### `SendChangeOrder`
 
@@ -1637,7 +1875,9 @@ Sends a stop sell order. Returns the internal ID (per session) of the order that
 | dPrice | PWideChar | Target price after edit |
 | nAmount | Integer | Quantity after edit |
 
-Sends a modification order. When modifying a stop order, the stop price must be provided as the target price, and the limit price will be calculated based on the same offset. Function deprecated in favor of function `SendChangeOrderV2`.
+Sends a modification order. When modifying a stop order, the stop price must be provided as the target price, and the limit price will be calculated based on the same offset.
+
+Function deprecated in favor of function `SendChangeOrderV2`.
 
 #### `SendCancelOrder`
 
@@ -1648,7 +1888,9 @@ Sends a modification order. When modifying a stop order, the stop price must be 
 | pwcClOrdId | PWideChar | ClOrdID of the order to be canceled (provided in OrderChangeCallback) |
 | pwcSenha | PWideChar | Routing password |
 
-Sends a cancellation order. The result of the cancellation request can be monitored in `TOrderChangeCallback`. Function deprecated in favor of function `SendCancelOrderV2`.
+Sends a cancellation order. The result of the cancellation request can be monitored in `TOrderChangeCallback`.
+
+Function deprecated in favor of function `SendCancelOrderV2`.
 
 #### `SendCancelOrders`
 
@@ -1660,7 +1902,9 @@ Sends a cancellation order. The result of the cancellation request can be monito
 | pwcTicker | PWideChar | Ticker of the asset to be traded |
 | pwcBolsa | PWideChar | Exchange of the asset to be traded |
 
-Sends an order to cancel all orders for an asset. The result of the cancellation request can be monitored in `TOrderChangeCallback` for each canceled order. Function deprecated in favor of function `SendCancelOrdersV2`.
+Sends an order to cancel all orders for an asset. The result of the cancellation request can be monitored in `TOrderChangeCallback` for each canceled order.
+
+Function deprecated in favor of function `SendCancelOrdersV2`.
 
 #### `SendCancelAllOrders`
 
@@ -1670,7 +1914,9 @@ Sends an order to cancel all orders for an asset. The result of the cancellation
 | pwcIDCorretora | PWideChar | Broker identifier (provided in GetAccount) |
 | pwcSenha | PWideChar | Routing password |
 
-Sends an order to cancel all open orders for all assets. The result of the cancellation request can be monitored in `TOrderChangeCallback` for each canceled order. Function deprecated in favor of function `SendCancelAllOrdersV2`.
+Sends an order to cancel all open orders for all assets. The result of the cancellation request can be monitored in `TOrderChangeCallback` for each canceled order.
+
+Function deprecated in favor of function `SendCancelAllOrdersV2`.
 
 #### `SendZeroPosition`
 
@@ -1683,7 +1929,9 @@ Sends an order to cancel all open orders for all assets. The result of the cance
 | pwcSenha | PWideChar | Routing password |
 | dPrice | Double | Order price |
 
-Sends an order to close the position of a specific asset. Returns the internal ID (per session) of the closing order, which can be compared with the return of `THistoryCallback`. Function deprecated in favor of function `SendZeroPositionV2`.
+Sends an order to close the position of a specific asset. Returns the internal ID (per session) of the closing order, which can be compared with the return of `THistoryCallback`.
+
+Function deprecated in favor of function `SendZeroPositionV2`.
 
 #### `SendZeroPositionAtMarket`
 
@@ -1695,7 +1943,9 @@ Sends an order to close the position of a specific asset. Returns the internal I
 | pwcBolsa | PWideChar | Exchange of the asset to be traded |
 | pwcSenha | PWideChar | Routing password |
 
-Sends an order to close the position of a specific asset at market value. Returns the internal ID (per session) of the closing order, which can be compared with the return of `THistoryCallback`. Function deprecated in favor of function `SendZeroPositionV2`.
+Sends an order to close the position of a specific asset at market value. Returns the internal ID (per session) of the closing order, which can be compared with the return of `THistoryCallback`.
+
+Function deprecated in favor of function `SendZeroPositionV2`.
 
 #### `GetOrders`
 
@@ -1706,7 +1956,9 @@ Sends an order to close the position of a specific asset at market value. Return
 | dtStart | PWideChar | Start date in the format DD/MM/YYYY |
 | dtEnd | PWideChar | End date in the format DD/MM/YYYY |
 
-Function that returns orders within a specified period. The return is made through the callback `THistoryCallback`, passed as a parameter to the initialization function. Function deprecated in favor of functions `HasOrdersInInterval`, `EnumerateOrdersByInterval` and `EnumerateAllOrders`.
+Function that returns orders within a specified period. The return is made through the callback `THistoryCallback`, passed as a parameter to the initialization function.
+
+Function deprecated in favor of functions `HasOrdersInInterval`, `EnumerateOrdersByInterval` and `EnumerateAllOrders`.
 
 #### `GetOrder`
 
@@ -1714,7 +1966,9 @@ Function that returns orders within a specified period. The return is made throu
 |---|---|---|
 | pwcClOrdId | PWideChar | ClOrdID of the order to be returned |
 
-Function that returns order data based on a ClOrdID. The return is made through the callback `TOrderChangeCallback`, passed as a parameter to the initialization function. Function deprecated in favor of function `GetOrderDetails`.
+Function that returns order data based on a ClOrdID. The return is made through the callback `TOrderChangeCallback`, passed as a parameter to the initialization function.
+
+Function deprecated in favor of function `GetOrderDetails`.
 
 #### `GetOrderProfitID`
 
@@ -1722,7 +1976,9 @@ Function that returns order data based on a ClOrdID. The return is made through 
 |---|---|---|
 | nProfitID | Int64 | ProfitID of the order to be returned |
 
-Function that returns order data based on a ProfitID (internal ID per session). The return is made through the callback `TOrderChangeCallback`, passed as a parameter to the initialization function. The ProfitID is valid only during the application's execution, unlike the ClOrdID. This ID is the return from the order sending functions. Function deprecated in favor of function `GetOrderDetails`.
+Function that returns order data based on a ProfitID (internal ID per session). The return is made through the callback `TOrderChangeCallback`, passed as a parameter to the initialization function. The ProfitID is valid only during the application's execution, unlike the ClOrdID. This ID is the return from the order sending functions.
+
+Function deprecated in favor of function `GetOrderDetails`.
 
 #### `GetPosition`
 
@@ -1758,7 +2014,9 @@ Function that returns the position for a given ticker. It returns a data structu
 
 The field "Position Side" corresponds to an enumerated type described below:
 
-- Purchased = 1 Sold = 2 Unknown = 0
+- Purchased = 1
+- Sold = 2
+- Unknown = 0
 
 Function deprecated in favor of function `GetPositionV2`.
 
@@ -1777,7 +2035,11 @@ Function deprecated in favor of function `GetPositionV2`.
 | Quantity | Int64 | Quantity |
 | MessageID | Int64 | [V2] Returns the message identifier from the trading server |
 
-Function to send orders. Accepts a pointer to a structure of type `TConnectorSendOrder` as a parameter. It is possible to send all types of orders in a single function, and it accepts both accounts and sub-accounts. In case of success, it returns the local order ID, in the case of a error, returns a error code. The order status can be tracked by the callback defined in `SetOrderCallback`. As of version 4.0.0.18, it is possible to use version 1 of the structure. From this version onwards, fields `OrderType` and `OrderSide` are sychronized with the values defined in `GetOrderDetails` and are defined by `TConnectorOrderType` and `TConnectorOrderSide`. Prior to version 4.0.0.18, only version 0 is supported, and the fields `OrderType` and `OrderSide` are defined by the enumerations `TConnectorOrderTypeV0` and `TConnectorOrderSideV0`.
+Function to send orders. Accepts a pointer to a structure of type `TConnectorSendOrder` as a parameter. It is possible to send all types of orders in a single function, and it accepts both accounts and sub-accounts. In case of success, it returns the local order ID, in the case of a error, returns a error code. The order status can be tracked by the callback defined in `SetOrderCallback`.
+
+As of version 4.0.0.18, it is possible to use version 1 of the structure. From this version onwards, fields `OrderType` and `OrderSide` are sychronized with the values defined in `GetOrderDetails` and are defined by `TConnectorOrderType` and `TConnectorOrderSide`.
+
+Prior to version 4.0.0.18, only version 0 is supported, and the fields `OrderType` and `OrderSide` are defined by the enumerations `TConnectorOrderTypeV0` and `TConnectorOrderSideV0`.
 
 #### `SendChangeOrderV2`
 
@@ -1839,7 +2101,9 @@ Sends an order to cancel all open orders for all assets. Accepts a pointer to a 
 | PositionType | Byte (`TConnectorPositionType`) | Indicates the position type |
 | MessageID | Int64 | [V2] Returns the message identifier from the trading server |
 
-Sends an order to zero the position of a specific asset. For market zeroing, the price should be -1. Accepts both accounts and sub-accounts. Accepts a pointer to a structure of type `TConnectorZeroPosition` as a parameter. In case of success, it returns the local order ID. The order status can be tracked by the callback defined in `SetOrderCallback`. Starting from version 1, `PositionType` is required;
+Sends an order to zero the position of a specific asset. For market zeroing, the price should be -1. Accepts both accounts and sub-accounts. Accepts a pointer to a structure of type `TConnectorZeroPosition` as a parameter. In case of success, it returns the local order ID. The order status can be tracked by the callback defined in `SetOrderCallback`.
+
+Starting from version 1, `PositionType` is required;
 
 #### `GetAccountCount`
 
@@ -1910,7 +2174,11 @@ Function to fetch the identifiers of the sub-accounts of an account. In case of 
 |---|---|---|
 | a_Position | TConnectorTradingAccountPosition | Position data |
 
-Function that returns the position for a specific account/sub-account and asset. The account and asset identifiers must be provided in the pointer. Starting from `TConnectorTradingAccountPosition`'s version 1, `PositionType` is required (`TConnectorPositionType`). The field EventID is related to the EventID received on the `TConnectorAssetPositionListCallback` callback.
+Function that returns the position for a specific account/sub-account and asset. The account and asset identifiers must be provided in the pointer.
+
+Starting from `TConnectorTradingAccountPosition`'s version 1, `PositionType` is required (`TConnectorPositionType`).
+
+The field EventID is related to the EventID received on the `TConnectorAssetPositionListCallback` callback.
 
 #### `GetOrderDetails`
 
@@ -1928,7 +2196,13 @@ Function to return the details of an order. The order identifier must be provide
 | a_dtStart | TSystemTime | Start date |
 | a_dtEnd | TSystemTime | Final date |
 
-This functions returns whether the order history for an account has been loaded at the specified interval. This function ignores the time part for the interval. Subaccount use their master account for their order history. If the order history has been loaded, this function returns `NL_OK`. Otherwise, a order history request will be sent to the server, and this function `NL_WAITING_SERVER`. Multiple calls to this function do not generate multiple requests to the server. If the date paremeters are invalid, this function returns `NL_OUT_OF_RANGE`. Neither date can be greater then the date returned by `GetServerClock`. If there is a server request, the callback defined by `SetOrderHistoryCallback` will notify when the history has been loaded. Once the orders are loaded, they can be iterate with the functionas `EnumerateOrdersByInterval` or `EnumerateAllOrders`.
+This functions returns whether the order history for an account has been loaded at the specified interval. This function ignores the time part for the interval. Subaccount use their master account for their order history.
+
+If the order history has been loaded, this function returns `NL_OK`. Otherwise, a order history request will be sent to the server, and this function `NL_WAITING_SERVER`. Multiple calls to this function do not generate multiple requests to the server. If the date paremeters are invalid, this function returns `NL_OUT_OF_RANGE`. Neither date can be greater then the date returned by `GetServerClock`.
+
+If there is a server request, the callback defined by `SetOrderHistoryCallback` will notify when the history has been loaded.
+
+Once the orders are loaded, they can be iterate with the functionas `EnumerateOrdersByInterval` or `EnumerateAllOrders`.
 
 #### `EnumerateOrdersByInterval`
 
@@ -1941,7 +2215,13 @@ This functions returns whether the order history for an account has been loaded 
 | a_Param | LPARAM | An application-defined value passed along to `a_Callback` |
 | a_Callback | TConnectorEnumerateOrdersProc | An applcation-defined function to be callbed |
 
-This function iterates over the orders of an account, filtering for subaccount (if supplied), and filtering for the specified datetime interval. For each order which fits the criteria, `a_Callback` is called. The `PConnectorOrder` pointer in `a_Callback` will have the version specified by `a_OrderVersion`. The data in the pointer is destroyed after each iteraction. No action is performed on `a_Param`, this paremeter is only passed along to `a_Callback`. If there is not a order history for the specified interval, this function will request it, as if calling the function `HasOrdersInInterval`, and this function will return `NL_WAITING_SERVER`. If the datetime paremeters are invalid, this function returns `NL_OUT_OF_RANGE`. Neither datetime can be greater then the datetime returned by `GetServerClock`. In case of success, this function will only return once the iration ends, returning `NL_OK`. It is possible to end the iteration earlier by returning `FALSE` on `a_Callback`.
+This function iterates over the orders of an account, filtering for subaccount (if supplied), and filtering for the specified datetime interval. For each order which fits the criteria, `a_Callback` is called.
+
+The `PConnectorOrder` pointer in `a_Callback` will have the version specified by `a_OrderVersion`. The data in the pointer is destroyed after each iteraction. No action is performed on `a_Param`, this paremeter is only passed along to `a_Callback`.
+
+If there is not a order history for the specified interval, this function will request it, as if calling the function `HasOrdersInInterval`, and this function will return `NL_WAITING_SERVER`. If the datetime paremeters are invalid, this function returns `NL_OUT_OF_RANGE`. Neither datetime can be greater then the datetime returned by `GetServerClock`.
+
+In case of success, this function will only return once the iration ends, returning `NL_OK`. It is possible to end the iteration earlier by returning `FALSE` on `a_Callback`.
 
 #### `EnumerateAllOrders`
 
@@ -1952,7 +2232,13 @@ This function iterates over the orders of an account, filtering for subaccount (
 | a_Param | LPARAM | Parâmetro definido pelo implementador, retornado em `a_Callback` |
 | a_Callback | TConnectorEnumerateOrdersProc | Função para receber os ordens |
 
-This function iterates over all the orders of an account, filtering for subaccount (if supplied). For each order which fits the criteria, `a_Callback` is called. The `PConnectorOrder` pointer in `a_Callback` will have the version specified by `a_OrderVersion`. The data in the pointer is destroyed after each iteraction. No action is performed on `a_Param`, this paremeter is only passed along to `a_Callback`. Unlike the function `EnumerateOrdersByInterval`, this function does not perform server requests, and returns a success even if there are no orders loaded in the order history. In case of success, this function will only return once the iration ends, returning `NL_OK`. It is possible to end the iteration earlier by returning `FALSE` on `a_Callback`.
+This function iterates over all the orders of an account, filtering for subaccount (if supplied). For each order which fits the criteria, `a_Callback` is called.
+
+The `PConnectorOrder` pointer in `a_Callback` will have the version specified by `a_OrderVersion`. The data in the pointer is destroyed after each iteraction. No action is performed on `a_Param`, this paremeter is only passed along to `a_Callback`.
+
+Unlike the function `EnumerateOrdersByInterval`, this function does not perform server requests, and returns a success even if there are no orders loaded in the order history.
+
+In case of success, this function will only return once the iration ends, returning `NL_OK`. It is possible to end the iteration earlier by returning `FALSE` on `a_Callback`.
 
 #### `EnumerateAllPositionAssets`
 
@@ -1963,7 +2249,11 @@ This function iterates over all the orders of an account, filtering for subaccou
 | a_Param | LPARAM | An application-defined value passed along to `a_Callback` |
 | a_Callback | TConnectorEnumerateAssetProc | An application-defined function to be called |
 
-This function iterates over all the open positions of an account, filtering for subaccount (if supplied), For each asset found, `a_Callback` is called. The `TConnectorAssetIdentifier` identifier in `a_Callback` will have the version specified by `a_AssetVersion`. The data in the identifier is destroyed after each iteraction. No action is performed on `a_Param`, this paremeter is only passed along to `a_Callback`. In case of success, this function will only return once the iration ends, returning `NL_OK`. It is possible to end the iteration earlier by returning `FALSE` on `a_Callback`.
+This function iterates over all the open positions of an account, filtering for subaccount (if supplied), For each asset found, `a_Callback` is called.
+
+The `TConnectorAssetIdentifier` identifier in `a_Callback` will have the version specified by `a_AssetVersion`. The data in the identifier is destroyed after each iteraction. No action is performed on `a_Param`, this paremeter is only passed along to `a_Callback`.
+
+In case of success, this function will only return once the iration ends, returning `NL_OK`. It is possible to end the iteration earlier by returning `FALSE` on `a_Callback`.
 
 #### `TranslateTrade`
 
@@ -2008,7 +2298,9 @@ If successful, this function returns the size of the Price Depth for one its sid
 | a_nPosition | Integer | Group price position |
 | a_pPrice | PConnectorPriceGroup | Group price |
 
-If successful, this function returns a Price Depth Entry (aka. price group), with position 0 being the top of the book, during auction, this is the position the theoric price will be located. It is necessary to be subscribed to Price Depth in order for this function to return properly. To subscribe to Price Depth, call `SubscribePriceDepth`. If the entry is a theoretical price entry, the price will be set to `-INF`, to obtain the actual therotical price, call `GetTheoreticalValues`.
+If successful, this function returns a Price Depth Entry (aka. price group), with position 0 being the top of the book, during auction, this is the position the theoric price will be located. It is necessary to be subscribed to Price Depth in order for this function to return properly. To subscribe to Price Depth, call `SubscribePriceDepth`.
+
+If the entry is a theoretical price entry, the price will be set to `-INF`, to obtain the actual therotical price, call `GetTheoreticalValues`.
 
 #### `GetTheoreticalValues`
 
@@ -2020,37 +2312,27 @@ If successful, this function returns a Price Depth Entry (aka. price group), wit
 
 During auction, this function returns the current theoric price and quantity. This function only works on assets that have been subscribed one way or another. Changes to the theoric values are notified in the function defined in the callback `SetTheoreticalPriceCallback`.
 
-#### `RequestSerieHistory`
-
-| Name | Type | Description |
-|---|---|---|
-| a_pSerieID | PConnectorSerieIdentifier | Series identifier |
-| a_pQuoteStart | PConnectorQuoteIdentifier | Initial date + QuoteNumber |
-| a_pQuoteEnd | PConnectorQuoteIdentifier | Final DateTime + QuoteNumber |
-| a_nCandleNumber | Integer | Number of desired candles |
-
-Requests historical data for a series. For 1-Trade and PriceAction series, `a_nCandleNumber` is ignored, only the interval between dates is considered. For other series, `a_nCandleNumber` cannot be greater than 10000. Returns `NL_INVALID_SERIE` if the series is outside the allowed limits. Returns `NL_LICENSE_NOT_ALLOWED` if the license does not allow subscribing to the desired series.
-
-| Asset | Allowed 1-Trade day range |
-|---|---|
-| WIN | 8 days |
-| WDO | 30 days |
-| DOL | 180 days |
-| IND | 180 days |
-| Others | 365 days |
-
 #### `SetEnabledHistOrder`
 
 This function is used to enable/disable the history and automatic order updates when starting the application (1 = Enable / 0 = Disable). When the history is disabled, the application will not automatically receive order data at startup, and calls such as GetPosition, which require the position to be built using operations, will not return valid results. To disable automatic updates, this function should be called immediately after the initialization functions. It is important to note that by disabling the history, position control will not be calculated correctly by the platform, and the functionalities for zeroing positions and order status may be compromised. The user should be aware of these risks before disabling the history..
 
 ### 3.2 Callbacks
 
-This section describes how each callback function in the library should be declared and its purpose. `Important:` Other DLL functions should not be used within a callback. Callbacks are invoked from the ConnectorThread, meaning they run on a different thread than the main thread of the client program. All callback functions must be declared using the `stdcall` calling convention (https://en.wikipedia.org/wiki/X86_calling_conventions). This applies to both 32-bit and 64-bit versions.
+This section describes how each callback function in the library should be declared and its purpose.
+
+`Important:` Other DLL functions should not be used within a callback.
+
+Callbacks are invoked from the ConnectorThread, meaning they run on a different thread than the main thread of the client program.
+
+All callback functions must be declared using the `stdcall` calling convention (https://en.wikipedia.org/wiki/X86_calling_conventions). This applies to both 32-bit and 64-bit versions.
 
 ```delphi
 TStateCallback = procedure(nConnStateType : Integer; nResult : Integer) stdcall;
+
 TSystemHealthCallback = procedure(nState : Integer) stdcall;
+
 TProgressCallback = procedure(rAssetID : TAssetIDRec; nProgress : Integer) stdcall;
+
 TNewTradeCallback = procedure(
     rAssetID     : TAssetIDRec;
     pwcDate      : PWideChar;
@@ -2062,6 +2344,7 @@ TNewTradeCallback = procedure(
     nSellAgent   : Integer;
     nTradeType   : Integer;
     bEdit        : Char) stdcall;
+
 TNewDailyCallback = procedure(
     rAssetID       : TAssetIDRec;
     pwcDate        : PWideChar;
@@ -2092,6 +2375,7 @@ TPriceBookCallback = procedure(
     dPrice     : Double;
     pArraySell : Pointer;
     pArrayBuy  : Pointer) stdcall;
+
 TPriceBookCallbackV2 = procedure(
     rAssetID   : TAssetIDRec;
     nAction    : Integer;
@@ -2102,6 +2386,7 @@ TPriceBookCallbackV2 = procedure(
     dPrice     : Double;
     pArraySell : Pointer;
     pArrayBuy  : Pointer) stdcall;
+
 TOfferBookCallback = procedure(
     rAssetID    : TAssetIDRec ;
     nAction     : Integer;
@@ -2119,6 +2404,7 @@ TOfferBookCallback = procedure(
     pwcDate     : PWideChar;
     pArraySell  : Pointer
     pArrayBuy   : Pointer) stdcall;
+
 TOfferBookCallbackV2 = procedure(
     rAssetID    : TAssetIDRec ;
     nAction     : Integer;
@@ -2136,21 +2422,26 @@ TOfferBookCallbackV2 = procedure(
     pwcDate     : PWideChar;
     pArraySell  : Pointer
     pArrayBuy   : Pointer) stdcall;
+
 TConnectorAssetPositionListCallback = procedure(
     AccountID : TConnectorAccountIdentifier;
     AssetID   : TConnectorAssetIdentifier;
     EventID   : Int64) stdcall; forward;
+
 TAccountCallback = procedure(
     nCorretora            : Integer;
     CorretoraNomeCompleto : PWideChar;
     AccountID             : PWideChar
     NomeTitular           : PWideChar) stdcall; forward;
+
 TConnectorBrokerAccountListCallback = procedure(
     BrokerID : Integer;
     Changed  : Cardinal); stdcall;
+
 TConnectorBrokerSubAccountListCallback = procedure(
     a_AccountID : TConnectorAccountIdentifier
 ); stdcall;
+
 TOrderChangeCallback = procedure(
     rAssetID    : TAssetIDRec;
     nCorretora  : Integer;
@@ -2169,6 +2460,7 @@ TOrderChangeCallback = procedure(
     Status      : PWideChar;
     Date        : PWideChar;
     TextMessage : PWideChar) stdcall;
+
 THistoryCallback = procedure(
     rAssetID   : TAssetIDRec;
     nCorretora : Integer;
@@ -2186,6 +2478,7 @@ THistoryCallback = procedure(
     ClOrdID    : PWideChar;
     Status     : PWideChar;
     Date       : PWideChar) stdcall;
+
 THistoryTradeCallback = procedure(
     rAssetID     : TAssetIDRec;
     pwcDate      : PWideChar;
@@ -2196,14 +2489,17 @@ THistoryTradeCallback = procedure(
     nBuyAgent    : Integer;
     nSellAgent   : Integer;
     nTradeType   : Integer) stdcall;
+
 TTinyBookCallback = procedure(
     rAssetID : TAssetIDRec;
     dPrice   : Double;
     nQtd     : Integer;
     nSide    : Integer) stdcall;
+
 TAssetListCallback = procedure(
     rAssetID : TAssetIDRec;
     pwcName  : PWideChar) stdcall;
+
 TAssetListInfoCallback = procedure(
     rAssetID            : TAssetIDRec;
     pwcName             : PWideChar;
@@ -2217,6 +2513,7 @@ TAssetListInfoCallback = procedure(
     dContractMultiplier : Double;
     strValidDate        : PWideChar;
     strISIN             : PWideChar) stdcall;
+
 TAssetListInfoCallbackV2 = procedure(
     rAssetID            : TAssetIDRec;
     pwcName             : PWideChar;
@@ -2233,13 +2530,16 @@ TAssetListInfoCallbackV2 = procedure(
     strSetor            : PWideChar;
     strSubSetor         : PWideChar;
     strSegmento         : PWideChar) stdcall;
+
 TChangeStateTicker = procedure(
     rAssetID : TAssetIDRec;
     pwcDate  : PWideChar;
     nState   : Integer) stdcall;
+
 TInvalidTickerCallback = procedure(
     const AssetID : TConnectorAssetIdentifier
 ) stdcall;
+
 TAdjustHistoryCallback = procedure(
     rAssetID      : TAssetIDRec;
     dValue        : Double;
@@ -2249,6 +2549,7 @@ TAdjustHistoryCallback = procedure(
     dtDeliber     : PWideChar;
     dtPagamento   : PWideChar;
     nAffectPrice  : Integer) stdcall;
+
 TAdjustHistoryCallbackV2 = procedure(
     rAssetID      : TAssetIDRec;
     dValue        : Double;
@@ -2259,15 +2560,18 @@ TAdjustHistoryCallbackV2 = procedure(
     dtPagamento   : PwideChar;
     nFlags        : Cardinal;
     dMult         : Double) stdcall;
+
 TTheoreticalPriceCallback = procedure(
     rAssetID          : TAssetIDRec;
     dTheoreticalPrice : Double;
     nTheoreticalQtd   : Int64) stdcall;
+
 TChangeCotation = procedure(
     rAssetID     : TAssetIDRec;
     pwcDate      : PWideChar;
     nTradeNumber : Cardinal;
     dPrice       : Double) stdcall;
+
 THistoryCallbackV2 = procedure(
     rAssetID     : TAssetIDRec;
     nCorretora   : Integer;
@@ -2288,6 +2592,7 @@ THistoryCallbackV2 = procedure(
     LastUpdate   : PWideChar;
     CloseDate    : PWideChar;
     ValidityDate : PWideChar) stdcall;
+
 TOrderChangeCallbackV2 = procedure(
     rAssetID     : TAssetIDRec;
     nCorretora   : Integer;
@@ -2309,17 +2614,21 @@ TOrderChangeCallbackV2 = procedure(
     CloseDate    : PWideChar;
     ValidityDate : PWideChar;
     TextMessage  : PWideChar) stdcall;
+
 TConnectorOrderCallback = procedure(
     const a_OrderID : TConnectorOrderIdentifier
 ); stdcall;
+
 TConnectorAccountCallback = procedure(
     const a_AccountID : TConnectorAccountIdentifier
 ); stdcall;
+
 TConnectorTradeCallback = procedure(
     const a_Asset  : TConnectorAssetIdentifier;
     const a_pTrade : Pointer;
     const a_nFlags : Cardinal
 ); stdcall;
+
 TConnectorTradingMessageResultCallback = procedure(
     const a_pResult : PConnectorTradingMessageResult
 ); stdcall;
@@ -2334,27 +2643,29 @@ CONNECTION_STATE_LOGIN        = 0;  // Connection to login server
 CONNECTION_STATE_ROTEAMENTO   = 1;  // Connection to routing server
 CONNECTION_STATE_MARKET_DATA  = 2;  // Connection to market data server
 CONNECTION_STATE_MARKET_LOGIN = 3;  // Login to server market data
+
 LOGIN_CONNECTED    = 0;   // Login server connected
 LOGIN_INVALID      = 1;   // Login is invalid
 LOGIN_INVALID_PASS = 2;   // Password is invalid
 LOGIN_BLOCKED_PASS = 3;   // Password is blocked
 LOGIN_EXPIRED_PASS = 4;   // Password has expired
 LOGIN_UNKNOWN_ERR  = 200; // Internal login error
+
 ROTEAMENTO_DISCONNECTED        = 0;
 ROTEAMENTO_CONNECTING          = 1;
 ROTEAMENTO_CONNECTED           = 2;
 ROTEAMENTO_BROKER_DISCONNECTED = 3;
 ROTEAMENTO_BROKER_CONNECTING   = 4;
 ROTEAMENTO_BROKER_CONNECTED    = 5;
+
 MARKET_DISCONNECTED         = 0;  // Disconnected from the market data server
 MARKET_CONNECTING           = 1;  // Connecting to the market data server
 MARKET_WAITING              = 2;  // Waiting for connection
 MARKET_NOT_LOGGED           = 3;  // Not logged into the market data server
 MARKET_CONNECTED            = 4;  // Connected to the market data
-MARKET_PERFORMANCE_WARNING  = 5;  // Connected, but the server reported performance
-degradation
-MARKET_PARTIAL_CONNECTED    = 6;  // Connected, but local delivery of market data
-callbacks has stalled
+MARKET_PERFORMANCE_WARNING  = 5;  // Connected, but the server reported performance degradation
+MARKET_PARTIAL_CONNECTED    = 6;  // Connected, but local delivery of market data callbacks has stalled
+
 CONNECTION_ACTIVATE_VALID   = 0;  // Valid activation
 CONNECTION_ACTIVATE_INVALID = 1;  // Invalid activation
 ```
@@ -2362,24 +2673,17 @@ CONNECTION_ACTIVATE_INVALID = 1;  // Invalid activation
 Given that the type `nConnStateType` received is one of the values of CONNECTION_STATE, and nResult is the login state of the specific service. The correct values for a valid connection are:
 
 - nConnStateType = CONNECTION_STATE_LOGIN
-
-nResult = LOGIN_CONNECTED
-
+  - nResult = LOGIN_CONNECTED
 - nConnStateType = CONNECTION_STATE_ROTEAMENTO
-
-nResult = ROTEAMENTO_CONNECTED
-
+  - nResult = ROTEAMENTO_CONNECTED
 - nConnStateType = CONNECTION_STATE_MARKET_DATA
-
-nResult = MARKET_CONNECTED
-
+  - nResult = MARKET_CONNECTED
 - nConnStateType = CONNECTION_STATE_MARKET_LOGIN
+  - nResult = CONNECTION_ACTIVATE_VALID
 
-nResult = CONNECTION_ACTIVATE_VALID
+**Note on `MARKET_PARTIAL_CONNECTED`**
 
-#### Note on `MARKET_PARTIAL_CONNECTED`
-
-When the producer is active but local delivery has been stalled, the DLL emits `TStateCallback(nConnStateType=2, nResult=6)`. This state indicates that the server feed is OK, but the client is not consuming the callbacks When delivery resumes, the DLL emits `TStateCallback(nConnStateType=2, nResult=4)` (MARKET_CONNECTED) again, signalling recovery. The client should treat state 6 as a critical warning: market data callbacks may be delayed or lost during the degradation window.
+When the producer is active but local delivery has been stalled, the DLL emits `TStateCallback(nConnStateType=2, nResult=6)`. This state indicates that **the server feed is OK, but the client is not consuming the callbacks** When delivery resumes, the DLL emits `TStateCallback(nConnStateType=2, nResult=4)` (MARKET_CONNECTED) again, signalling recovery. The client should treat state 6 as a critical warning: market data callbacks may be delayed or lost during the degradation window.
 
 #### `TSystemHealthCallback`
 
@@ -2474,7 +2778,9 @@ Corresponds to the callback to provide a new quotation with aggregated informati
 | pArraySell | Pointer | Complete sell market depth |
 | pArrayBuy | Pointer | Complete buy market depth |
 
-Deprecated: This callback has been replaced by `TConnectorPriceDepthCallback`. Corresponds to the callback to provide an update in the price market depth. The parameters are valid or not according to the value of nAction, described below in detail:
+**Deprecated**: This callback has been replaced by `TConnectorPriceDepthCallback`.
+
+Corresponds to the callback to provide an update in the price market depth. The parameters are valid or not according to the value of nAction, described below in detail:
 
 - rAssetID: Ticker;
 - nAction: (atAdd = 0, atEdit = 1, atDelete = 2, atDeleteFrom = 3, atFullBook = 4);
@@ -2484,7 +2790,9 @@ Deprecated: This callback has been replaced by `TConnectorPriceDepthCallback`. C
 - nCount: Number of offers sold/bought; (Valid in atAdd and atEdit).
 - dPrice: Price; (Valid in atAdd).
 
-pArraySell, pArrayBuy: List of buy/sell offers; (Valid in atFullBook).. This callback was designed to maintain separate lists of buy and sell offers. Therefore, each nAction received must be handled to modify these lists, depending on the side received in nSide, as described below. All adjustments depending on nPosition refer to the position from the end of the list (in lists starting at 0, size - nPosition - 1).
+pArraySell, pArrayBuy: List of buy/sell offers; (Valid in atFullBook)..
+
+This callback was designed to maintain separate lists of buy and sell offers. Therefore, each nAction received must be handled to modify these lists, depending on the side received in nSide, as described below. All adjustments depending on nPosition refer to the position from the end of the list (in lists starting at 0, size - nPosition - 1).
 
 - atAdd: Insert a new offer after the position given by nPosition.
 - atDelete: Delete an offer at the position given by nPosition.
@@ -2492,7 +2800,9 @@ pArraySell, pArrayBuy: List of buy/sell offers; (Valid in atFullBook).. This cal
 - atEdit: Update the offer information at the position given by nPosition.
 - atFullBook: Create the market depth with all existing offers.
 
-These details are received through the pArrayBuy and pArraySell parameters. For creating the list, when receiving atFullBook, both pArrayBuy and pArraySell arrays have the following layout in memory: Header
+These details are received through the pArrayBuy and pArraySell parameters. For creating the list, when receiving atFullBook, both pArrayBuy and pArraySell arrays have the following layout in memory:
+
+Header
 
 | Field | Type | Size | Offset |
 |---|---|---|---|
@@ -2523,7 +2833,9 @@ For more details on how to correctly assemble the market depth, refer to the exa
 | pArraySell | Pointer | Complete sell market depth |
 | pArrayBuy | Pointer | Complete buy market depth |
 
-Deprecated: This callback has been replaced by `TConnectorPriceDepthCallback`. Corresponds to the callback to provide an update in the price market depth. The parameters are valid or not according to the value of nAction, described below in detail:
+**Deprecated**: This callback has been replaced by `TConnectorPriceDepthCallback`.
+
+Corresponds to the callback to provide an update in the price market depth. The parameters are valid or not according to the value of nAction, described below in detail:
 
 - rAssetID: Ticker;
 - nAction: (atAdd = 0, atEdit = 1, atDelete = 2, atDeleteFrom = 3, atFullBook = 4);
@@ -2533,7 +2845,9 @@ Deprecated: This callback has been replaced by `TConnectorPriceDepthCallback`. C
 - nCount: Number of offers sold/bought; (Valid in atAdd and atEdit).
 - dPrice: Price; (Valid in atAdd).
 
-pArraySell, pArrayBuy: List of buy/sell offers; (Valid in atFullBook). This callback was designed to maintain separate lists of buy and sell offers. Therefore, each nAction received must be handled to modify these lists, depending on the side received in nSide, as described below. All adjustments depending on nPosition refer to the position from the end of the list (in lists starting at 0, size - nPosition - 1).
+pArraySell, pArrayBuy: List of buy/sell offers; (Valid in atFullBook).
+
+This callback was designed to maintain separate lists of buy and sell offers. Therefore, each nAction received must be handled to modify these lists, depending on the side received in nSide, as described below. All adjustments depending on nPosition refer to the position from the end of the list (in lists starting at 0, size - nPosition - 1).
 
 - atAdd: Insert a new offer after the position given by nPosition.
 - atDelete: Delete an offer at the position given by nPosition.
@@ -2541,7 +2855,9 @@ pArraySell, pArrayBuy: List of buy/sell offers; (Valid in atFullBook). This call
 - atEdit: Update the offer information at the position given by nPosition.
 - atFullBook: Create the market depth with all existing offers.
 
-These details are received through the pArrayBuy and pArraySell parameters. For creating the list, when receiving atFullBook, both pArrayBuy and pArraySell arrays have the following layout in memory: Header
+These details are received through the pArrayBuy and pArraySell parameters. For creating the list, when receiving atFullBook, both pArrayBuy and pArraySell arrays have the following layout in memory:
+
+Header
 
 | Field | Type | Size | Offset |
 |---|---|---|---|
@@ -2718,7 +3034,9 @@ Corresponds to the callback for trades that were requested via the `GetHistoryTr
 | nQtd | Integer | Quantity |
 | nSide | Integer | Buy or sell side (Buy=0, Sell=1) |
 
-Corresponds to the top of the market depth callback. rAssetID indicates which asset the offer belongs to according to the TAssetIDRec structure already specified. dPrice: Price; nQtd: Sell/Buy quantity; nSide: Order side (Buy=0, Sell=1). The callbacks described below are only available after initialization using the `DLLInitializeLogin` function, therefore only for initialization with routing.
+Corresponds to the top of the market depth callback. rAssetID indicates which asset the offer belongs to according to the TAssetIDRec structure already specified. dPrice: Price; nQtd: Sell/Buy quantity; nSide: Order side (Buy=0, Sell=1).
+
+The callbacks described below are only available after initialization using the `DLLInitializeLogin` function, therefore only for initialization with routing.
 
 #### `TAccountCallback`
 
@@ -2729,13 +3047,13 @@ Corresponds to the top of the market depth callback. rAssetID indicates which as
 | AccountID | PWideChar | Client account identification |
 | NomeTitular | PWideChar | Account holder's name |
 
-Corresponds to the callback to provide information on existing accounts. It is possible to verify if the account is a simulation through the broker's name or identifier. The callback is fired in the following situations:
+Corresponds to the callback to provide information on existing accounts. It is possible to verify if the account is a simulation through the broker's name or identifier.
 
-```delphi
+The callback is fired in the following situations:
+
 1. Automatically after login, when the account list is received from the routing server.
 2. When account data changes.
-3. On demand, in response to a GetAccount call for example.
-```
+3. On demand, in response to a `GetAccount` call for example.
 
 #### `TOrderChangeCallback`
 
@@ -2786,10 +3104,10 @@ Corresponds to the order history request callback. The history includes only ord
 
 #### `TAssetListCallback`
 
-| Name | Type | Descr | iption |
-|---|---|---|---|
-| rAssetID | TAssetIDRec | Asset to which the market depth belongs |   |
-| pwcName | PWideChar | Asset description |   |
+| Name | Type | Description |
+|---|---|---|
+| rAssetID | TAssetIDRec | Asset to which the market depth belongs |
+| pwcName | PWideChar | Asset description |
 
 Corresponds to the asset information request callback. It is necessary to use the `SetAssetListCallback` function for this callback to receive data.
 
@@ -2804,7 +3122,7 @@ Corresponds to the asset information request callback. It is necessary to use th
 | nMaxOrderQtd | Int64 | Maximum allowed order quantity |
 | nLote | Int64 | Lot size |
 | stSecurityType | Integer | Asset Type * |
-| ssSecuritySubType | Integer | Asset subtype |
+| ssSecuritySubType | Integer | Asset subtype ** |
 | dMinPriceIncrement | Double | Minimum price increment |
 | dContractMultiplier | Double | Contract multiplier |
 | strValidDate | PWideChar | Expiration date, if applicable |
@@ -2864,6 +3182,7 @@ The `ssSecuritySubType` field is a specification within the type and can be one 
 20. ssCurrency
 21. ssOTC                     // OTC Over-the-Counter Market
 22. ssFII                     // FII Real Estate Investment Fund
+
 // PUMA 2.0 -Equities
 23. ssOrdinaryRights          // DO
 24. ssPreferredRights         // DP
@@ -2888,6 +3207,7 @@ The `ssSecuritySubType` field is a specification within the type and can be one 
 43. ssSecurityLoan
 44. ssTradeableIndex
 45. ssOthers
+
 46. ssBrazilianDepositaryReceipt       // BDR
 47. ssFund
 48. ssOtherReceipt
@@ -2905,6 +3225,7 @@ The `ssSecuritySubType` field is a specification within the type and can be one 
 60. ssNetAuction
 61. ssTradableIndexInPartnership
 62. ssNontradableIndexInPartnership
+
 63. ssFixedIncomeETF
 64. ssNontradableFixedIncomeETF
 65. ssOutrightPurchase
@@ -2931,6 +3252,7 @@ The `ssSecuritySubType` field is a specification within the type and can be one 
 86. ssReceiptPrimaryMarket
 87. ssGermanPublicDebts
 88. ssStockRollover
+
 93. ssStrategySpotDollar
 94. ssTargetRate
 95. ssTradableETFRealState
@@ -2949,7 +3271,7 @@ The `ssSecuritySubType` field is a specification within the type and can be one 
 | nMaxOrderQtd | Int64 | Maximum allowed order quantity |
 | nLote | Int64 | Lot size |
 | stSecurityType | Integer | Asset type * |
-| ssSecuritySubType | Integer | Asset subtype |
+| ssSecuritySubType | Integer | Asset subtype ** |
 | dMinPriceIncrement | Double | Minimum price increment |
 | dContractMultiplier | Double | Contract multiplier |
 | strValidDate | PWideChar | Expiration date, if applicable |
@@ -3028,10 +3350,13 @@ Corresponds to the asset adjustment callback. To use this callback, it must be s
 | nFlags | Cardinal | Sum flag (described below) |
 | dMult | Double | Multiplier |
 
-Corresponds to the asset adjustment callback. To use this callback, it must be sent to the DLL through the `SetAdjustHistoryCallbackV2` function. `nFlags` is a bit field from b0 to b31, where bit 0 (least significant) indicates whether the adjustment affects the price, and bit 1 indicates if it is a sum adjustment. `dMult` is the pre- computed value that should be multiplied by the price to apply the adjustment. It is only used if the adjustment is not a sum adjustment and affects the price, as indicated in the `nFlags` field. A `dMult` value of -9999 indicates that it is invalid and should not be used. If `dMult` is invalid, dValue is used for the calculation, where subtraction is performed for sum adjustments and division otherwise. To calculate the adjustment, the parameters are used as follows:
+Corresponds to the asset adjustment callback. To use this callback, it must be sent to the DLL through the `SetAdjustHistoryCallbackV2` function. `nFlags` is a bit field from b0 to b31, where bit 0 (least significant) indicates whether the adjustment affects the price, and bit 1 indicates if it is a sum adjustment. `dMult` is the pre- computed value that should be multiplied by the price to apply the adjustment. It is only used if the adjustment is not a sum adjustment and affects the price, as indicated in the `nFlags` field. A `dMult` value of -9999 indicates that it is invalid and should not be used. If `dMult` is invalid, dValue is used for the calculation, where subtraction is performed for sum adjustments and division otherwise.
+
+To calculate the adjustment, the parameters are used as follows:
 
 - When `dMult` is a valid value, the adjustment is made by multiplying the price by this value.
-- When the sum flag is set, the adjustment value is subtracted from the price When the sum flag is not set, the price is divided by the adjustment value.
+- When the sum flag is set, the adjustment value is subtracted from the price
+- When the sum flag is not set, the price is divided by the adjustment value.
 
 Pseudocode:
 
@@ -3169,7 +3494,17 @@ Corresponds to the callback to provide information on existing sub-accounts avai
 
 ### Initializing with Routing
 
-To use the library, it is essential to initialize the services through the initialization functions. More specifically, if routing services are to be used, the `DLLInitializeLogin` function must be used, which will establish a connection to the routing and market data servers. This function is described in the exposed functions section and requires an activation code provided at the time of product purchase, as well as a username and password to log into the authentication server. The other parameters are mandatory callbacks that will be called by the DLL during use and need to be specified at the time of initialization. It is important to note that all callbacks occur in a thread called ConnectorThread and, therefore, happen simultaneously with the client application. The client application should process the data provided through the callbacks as data to be consumed from another thread. If necessary, the handling of writing this data should be done with critical sections or mutexes. The data received via callbacks is stored in a single data queue, so any lengthy processing within the callback functions may delay the internal message processing queue of the DLL and cause delays in receiving trades or other information. To avoid this, the data should be processed and passed to other application threads immediately, or perform the minimum processing possible. Database accesses or disk writes should be avoided during the processing of a callback. When working with callbacks, it is crucial to distinguish the DLL functions between request and accessor functions. Since callbacks are designed to receive data, you must never call request functions (such as order submission, history, or subscription) within them, as this may cause exceptions and undefined behavior. On the other hand, the accessor functions, whose purpose is precisely to materialize the delivered data, must be called synchronously from within the callback itself, taking advantage of the consistency guaranteed by the ConnectorThread. More implementation details can be clarified in the provided examples.
+To use the library, it is essential to initialize the services through the initialization functions. More specifically, if routing services are to be used, the `DLLInitializeLogin` function must be used, which will establish a connection to the routing and market data servers.
+
+This function is described in the exposed functions section and requires an activation code provided at the time of product purchase, as well as a username and password to log into the authentication server. The other parameters are mandatory callbacks that will be called by the DLL during use and need to be specified at the time of initialization.
+
+It is important to note that all callbacks occur in a thread called ConnectorThread and, therefore, happen simultaneously with the client application. The client application should process the data provided through the callbacks as data to be consumed from another thread. If necessary, the handling of writing this data should be done with critical sections or mutexes.
+
+The data received via callbacks is stored in a single data queue, so any lengthy processing within the callback functions may delay the internal message processing queue of the DLL and cause delays in receiving trades or other information. To avoid this, the data should be processed and passed to other application threads immediately, or perform the minimum processing possible. Database accesses or disk writes should be avoided during the processing of a callback.
+
+When working with callbacks, it is crucial to distinguish the DLL functions between request and accessor functions. Since callbacks are designed to receive data, you must never call request functions (such as order submission, history, or subscription) within them, as this may cause exceptions and undefined behavior. On the other hand, the accessor functions, whose purpose is precisely to materialize the delivered data, must be called synchronously from within the callback itself, taking advantage of the consistency guaranteed by the ConnectorThread.
+
+More implementation details can be clarified in the provided examples.
 
 ### Initializing with Market Data
 
@@ -3180,35 +3515,25 @@ The Market Data initialization process is analogous to the Routing initializatio
 All types mentioned in this document are types specified in the Delphi language. Below are some links for conversion or mapping of these types to the languages used in the examples.
 
 - Delphi to C Type Mapping
-
-https://docwiki.embarcadero.com/RADStudio/Tokyo/en/Delphi_to_C%2B%2B_types_mapping
-
+  - https://docwiki.embarcadero.com/RADStudio/Tokyo/en/Delphi_to_C%2B%2B_types_mapping
 - C Type to Python Conversion
-
-https://docs.python.org/2/library/ctypes.html
-
+  - https://docs.python.org/2/library/ctypes.html
 - Delphi to C# Type Conversion
-
-http://www.netcoole.com/delphi2cs/datatype.htm
+  - http://www.netcoole.com/delphi2cs/datatype.htm
 
 ### 32-bit Linkage
 
 To use the library in 32-bit mode, the application must also be compiled in 32 bits. Since it operates in 32 bits, there is a 4GB memory limitation, which will be shared between the library and the client application. Therefore, it is not recommended to request large amounts of data in a single request, as this could exceed the process's memory limit.
 
 - C#
-
-Using Visual Studio, it is necessary to change the target platform in the Configuration Manager from
-`Any CPU` to `x86`.
-
+  - Using Visual Studio, it is necessary to change the target platform in the Configuration Manager from `Any CPU` to `x86`.
 - Python
-
-The `python.exe` interpreter must also be 32-bit. Additionally, there is a bug in 32-bit Python where
-a callback containing a type larger than 32 bits fails and causes an exception. Follow the issue here:
-https://bugs.python.org/issue41021. Therefore, we recommend that clients who wish to use 32-bit
-Python use version 3.6.2, which was tested by the Nelogica team and does not have this issue.
+  - The `python.exe` interpreter must also be 32-bit. Additionally, there is a bug in 32-bit Python where a callback containing a type larger than 32 bits fails and causes an exception. Follow the issue here: https://bugs.python.org/issue41021. Therefore, we recommend that clients who wish to use 32-bit Python use version 3.6.2, which was tested by the Nelogica team and does not have this issue.
 
 For other languages, it is only necessary to switch the compilation mode to 32 bits.
 
 ### 64-bit Linkage
 
-To use the library in 64-bit mode, the application must also be compiled in 64 bits. The calling convention remains stdcall, just like in the 32-bit version. There are no known issues with the example languages in the 64-bit version, so there is no recommended version; the latest versions of each language can be used. The 64-bit version does not have a memory limitation and can therefore use the maximum available memory in the system, allowing larger data requests in a single request, limited by the amount of available RAM.
+To use the library in 64-bit mode, the application must also be compiled in 64 bits. The calling convention remains stdcall, just like in the 32-bit version. There are no known issues with the example languages in the 64-bit version, so there is no recommended version; the latest versions of each language can be used.
+
+The 64-bit version does not have a memory limitation and can therefore use the maximum available memory in the system, allowing larger data requests in a single request, limited by the amount of available RAM.
